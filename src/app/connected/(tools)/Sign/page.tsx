@@ -1,11 +1,10 @@
 "use client";
-
-import { ccc } from "@ckb-ccc/connector-react";
 import React, { useState } from "react";
 import { Button } from "../../../components/Button";
 import { TextInput } from "../../../components/Input";
 import { useApp } from "../../../context";
 import { ButtonsPanel } from "../../../components/ButtonsPanel";
+import axios from "axios";
 
 export default function Sign() {
   const { signer, createSender } = useApp();
@@ -36,16 +35,23 @@ export default function Sign() {
         <Button
           className="ml-2"
           onClick={async () => {
-            if (
-              !(await ccc.Signer.verifyMessage(
-                messageToSign,
-                JSON.parse(signature),
-              ))
-            ) {
-              error("Invalid");
-              return;
+            try {
+              const ckbAddress =await signer?.getRecommendedAddress()
+              const response = await axios.post("http://localhost:50002/ccc-verify", {
+                message: messageToSign,
+                address: ckbAddress, // 根据需要调整
+                sign_response_data: JSON.parse(signature)
+              });
+
+              if (response.data.result) {
+                log("Valid");
+              } else {
+                error("Invalid");
+              }
+            } catch (err) {
+              error("Verification failed");
+              console.error(err);
             }
-            log("Valid");
           }}
         >
           Verify
