@@ -37,9 +37,11 @@ export default function Sign() {
           onClick={async () => {
             try {
               const ckbAddress =await signer?.getRecommendedAddress()
+              const internelAddress = await signer?.getInternalAddress()
               const response = await axios.post("http://localhost:50002/ccc-verify", {
                 message: messageToSign,
-                address: ckbAddress, // 根据需要调整
+                ckb_address: ckbAddress, // 根据需要调整
+                internel_address:internelAddress,
                 sign_response_data: JSON.parse(signature)
               });
 
