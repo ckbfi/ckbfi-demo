@@ -8,6 +8,7 @@ import { ccc } from "@ckb-ccc/connector-react";
 import { bytesFromAnyString, useGetExplorerLink } from "../../../utils";
 import { useApp } from "../../../context";
 import { ButtonsPanel } from "../../../components/ButtonsPanel";
+import {numFrom,udtBalanceFrom} from "@ckb-ccc/connector-react";
 
 export default function Transfer() {
   const { signer, createSender } = useApp();
@@ -46,6 +47,36 @@ export default function Transfer() {
               error("Only one destination is allowed for max amount");
               return;
             }
+            // 获取xudt的所有余额
+            const xUdtType = await ccc.Script.fromKnownScript(
+              signer.client,
+              ccc.KnownScript.XUdt,
+              "0xf2be170f008edce5630342efc894093820133e944d9091c9b0efe2d29cddca20",
+            );
+            const { script: me } = await signer.getRecommendedAddressObj();
+            log("Your address is", JSON.stringify(me, null, 2));
+            const xudt_tx = ccc.Transaction.from({
+              outputs: [{lock: me, type: xUdtType}],
+              outputsData:[ccc.numLeToBytes(1,16)],
+            });
+            const { accumulated } = await xudt_tx.completeInputs(
+              signer,
+              {
+                script: xUdtType,
+                outputDataLenRange: [16, numFrom("0xffffffff")],
+              },
+              (acc, { outputData }) => {
+                const balance = Number(udtBalanceFrom(outputData));
+                const sum = acc + balance;
+                return sum;
+              },
+              0,
+            );
+            console.log("xudt_tx",xudt_tx);
+            // const balance = await xudt_tx.getInputsUdtBalance(signer.client, xUdtType);
+            // console.log("You have", balance, "xUDT");
+            log("You have", accumulated);
+            
 
             log("Calculating the max amount...");
             // Verify destination address
@@ -53,12 +84,13 @@ export default function Transfer() {
               transferTo,
               signer.client,
             );
-
+            console.log("data",data);
             // Build the full transaction to estimate the fee
             const tx = ccc.Transaction.from({
               outputs: [{ lock: toLock }],
               outputsData: [bytesFromAnyString(data)],
             });
+            console.log("tx",tx);
 
             // Complete missing parts for transaction
             await tx.completeInputsAll(signer);
