@@ -14,17 +14,21 @@ const TOTAL_XUDT_SUPPLY = BigInt(800_000_000) * BigInt(100_000_000);
 function getPrice(currentXudtAmount:bigint, xudtAmount:bigint) {
     console.log("currentXudtAmount", currentXudtAmount);
     console.log("xudtAmount", xudtAmount);
-    const dg = BigInt(133) * BigInt("10000000000000000000000000000000");
-    const uint128_400_000_000 = BigInt(4) * BigInt(100_000_000);
+    currentXudtAmount = currentXudtAmount / BigInt(100_000_000);
+    xudtAmount = xudtAmount / BigInt(100_000_000);
+    const dg = BigInt(91500000000000)
+    const uint128_400_000_000 = BigInt(1000);
     const uint128_1 = BigInt(1);
     const uint128_2 = BigInt(2);
 
     const sum1 = (currentXudtAmount + uint128_400_000_000 - uint128_1) *
-                 (currentXudtAmount + uint128_400_000_000) / dg *
-                 (uint128_2 * (currentXudtAmount + uint128_400_000_000) - uint128_1);
+                 (currentXudtAmount + uint128_400_000_000)  *
+                 (uint128_2 * (currentXudtAmount + uint128_400_000_000) - uint128_1)/ dg;
     const sum2 = (currentXudtAmount + uint128_400_000_000 + xudtAmount - uint128_1) *
-                 (currentXudtAmount + uint128_400_000_000 + xudtAmount) / dg *
-                 (uint128_2 * (currentXudtAmount + uint128_400_000_000) + uint128_2 * xudtAmount - uint128_1);
+                 (currentXudtAmount + uint128_400_000_000 + xudtAmount) *
+                 (uint128_2 * (currentXudtAmount + uint128_400_000_000) + uint128_2 * xudtAmount - uint128_1)/ dg ;
+    console.log("sum1", sum1);
+    console.log("sum2", sum2);
     const summation = sum2 - sum1;
     return summation;
 }
@@ -51,6 +55,12 @@ export default function TransferXUdt() {
   const [sellXudtAmount, setSellXudtAmount] = useState("");
   const [estimatedCkb, setEstimatedCkb] = useState("");
   const [estimatedCkbForSell, setEstimatedCkbForSell] = useState("");
+  const boundingsLock = new ccc.Script("0xbfd51997b37f85554e3dd9dbe6a229a1199a1f6e87c0acd888493de0c37b4ad1", "type", "0x756defe0217d1ba946cf67966498ec8d72cfe227632d3c3226dc38ee9ae4ee3d");
+  const type_args = "0x756defe0217d1ba946cf67966498ec8d72cfe227632d3c3226dc38ee9ae4ee3d";
+  const CellDepsTxHash = "0xac2f1326d766b07fda3abd4545c4d0f1bee61bc3dcd002553991ba89cb353faa"
+  //const type = await ccc.Script.fromKnownScript(signer.client, ccc.KnownScript.XUdt, "0x756defe0217d1ba946cf67966498ec8d72cfe227632d3c3226dc38ee9ae4ee3d");
+  // 将type一开始就定义好，构造异步函数，然后在useEffect中调用
+  
 
   useEffect(() => {
     const calculateEstimatedCkb = async () => {
@@ -61,14 +71,13 @@ export default function TransferXUdt() {
       const buyAmount = ccc.fixedPointFrom(buyXudtAmount);
       let poolXudtAmount = BigInt(0);
 
-      const boundingsLock = new ccc.Script("0xb310496be546e52f9319891b749bb9db7fec31356335feff7c6a5d0b13553333", "type", "0x85ea1f0465f2e0696d1441ee7f51d13d927145d662137088320225278362f91c");
       if (!signer) {
         return;
       }
-      const type = await ccc.Script.fromKnownScript(signer.client, ccc.KnownScript.XUdt, "0x85ea1f0465f2e0696d1441ee7f51d13d927145d662137088320225278362f91c");
+      const type = await ccc.Script.fromKnownScript(signer.client, ccc.KnownScript.XUdt, type_args);
 
       const poolCells = [];
-      const boundingsCell = signer.client.findCells({
+      const boundingsCell = signer.client.findCellsOnChain({
         script: boundingsLock,
         scriptType: "lock",
         scriptSearchMode: "exact",
@@ -82,6 +91,7 @@ export default function TransferXUdt() {
       }
 
       const shouldPayCkbAmount = getBuyPriceAfterFee(TOTAL_XUDT_SUPPLY - poolXudtAmount, buyAmount);
+      console.log("shouldPayCkbAmount", shouldPayCkbAmount);
       setEstimatedCkb(ccc.fixedPointToString(shouldPayCkbAmount, 8));
     };
 
@@ -97,14 +107,14 @@ export default function TransferXUdt() {
       const sellAmount = ccc.fixedPointFrom(sellXudtAmount);
       let poolXudtAmount = BigInt(0);
 
-      const boundingsLock = new ccc.Script("0xb310496be546e52f9319891b749bb9db7fec31356335feff7c6a5d0b13553333", "type", "0x85ea1f0465f2e0696d1441ee7f51d13d927145d662137088320225278362f91c");
+      
       if (!signer) {
         return;
       }
-      const type = await ccc.Script.fromKnownScript(signer.client, ccc.KnownScript.XUdt, "0x85ea1f0465f2e0696d1441ee7f51d13d927145d662137088320225278362f91c");
+      const type = await ccc.Script.fromKnownScript(signer.client, ccc.KnownScript.XUdt, type_args);
 
       const poolCells = [];
-      const boundingsCell = signer.client.findCells({
+      const boundingsCell = signer.client.findCellsOnChain({
         script: boundingsLock,
         scriptType: "lock",
         scriptSearchMode: "exact",
@@ -158,18 +168,18 @@ export default function TransferXUdt() {
               );
             const buyAmount = ccc.fixedPointFrom(buyXudtAmount);
             let poolXudtAmount = BigInt(0);
-            let poolXudtCell;
+            let poolXudtCell:ccc.Cell | undefined;
             const poolCells = [];
-            const boundingsLock = new ccc.Script("0xb310496be546e52f9319891b749bb9db7fec31356335feff7c6a5d0b13553333", "type", "0x85ea1f0465f2e0696d1441ee7f51d13d927145d662137088320225278362f91c");
-            const type = await ccc.Script.fromKnownScript(signer.client, ccc.KnownScript.XUdt, "0x85ea1f0465f2e0696d1441ee7f51d13d927145d662137088320225278362f91c");
+            const type = await ccc.Script.fromKnownScript(signer.client, ccc.KnownScript.XUdt, type_args);
 
-            const boundingsCell = signer.client.findCells({
+            const boundingsCell =signer.client.findCellsOnChain({
               script: boundingsLock,
               scriptType: "lock",
               scriptSearchMode: "exact",
             });
 
             for await (const cell of boundingsCell) {
+              console.log("cell", cell);
               poolCells.push(cell);
               if (cell.cellOutput.type?.args === type.args) {
                 poolXudtAmount += udtBalanceFrom(cell.outputData);
@@ -184,26 +194,41 @@ export default function TransferXUdt() {
                 poolCkbCell = cell;
               }
             }
+            let tx: ccc.Transaction;
+            if (poolCkbCell){
+              tx = ccc.Transaction.from({
+                inputs: [new ccc.CellInput(poolXudtCell!.outPoint, BigInt(0)), new ccc.CellInput(poolCkbCell!.outPoint, BigInt(0))],
+                outputs: [
+                  { capacity: ccc.fixedPointFrom(154), lock: boundingsLock, type },
+                  { capacity: poolCkbCell!.cellOutput.capacity + shouldPayCkbAmount, lock: boundingsLock },
+                  { capacity: ccc.fixedPointFrom(144), lock, type },
+                ],
+                outputsData: [
+                  ccc.numLeToBytes(udtBalanceFrom(poolXudtCell!.outputData) - buyAmount, 16),
+                  ccc.numLeToBytes(0),
+                  ccc.numLeToBytes(buyAmount, 16),
+                ]
+              });
+            }else {
+              tx = ccc.Transaction.from({
+                inputs: [new ccc.CellInput(poolXudtCell!.outPoint, BigInt(0))],
+                outputs: [
+                  { capacity: ccc.fixedPointFrom(154), lock: boundingsLock, type },
+                  { capacity: shouldPayCkbAmount, lock: boundingsLock },
+                  { capacity: ccc.fixedPointFrom(144), lock, type },
+                ],
+                outputsData: [
+                  ccc.numLeToBytes(udtBalanceFrom(poolXudtCell!.outputData) - buyAmount, 16),
+                  ccc.numLeToBytes(0),
+                  ccc.numLeToBytes(buyAmount, 16),
+                ]
+              });
+            }
 
-            const tx = ccc.Transaction.from({
-              inputs: [
-                new ccc.CellInput(poolXudtCell!.outPoint, BigInt(0)),
-                new ccc.CellInput(poolCkbCell!.outPoint, BigInt(0)),
-              ],
-              outputs: [
-                { capacity: ccc.fixedPointFrom(154), lock: boundingsLock, type },
-                { capacity: poolCkbCell!.cellOutput.capacity + shouldPayCkbAmount, lock: boundingsLock },
-                { capacity: ccc.fixedPointFrom(144), lock, type },
-              ],
-              outputsData: [
-                ccc.numLeToBytes(udtBalanceFrom(poolXudtCell!.outputData) - buyAmount, 16),
-                ccc.numLeToBytes(0),
-                ccc.numLeToBytes(buyAmount, 16),
-              ]
-            });
+            
 
             await tx.addCellDepsOfKnownScripts(signer.client, ccc.KnownScript.XUdt);
-            tx.addCellDepsAtStart(new ccc.CellDep(new ccc.OutPoint("0xf42e2febc2b07eb7c07a0824abcc38d6cf251cb10e17e3de37b4351f30ee24ec", BigInt(0)), ccc.depTypeFrom("code")) as ccc.CellDepLike);
+            tx.addCellDepsAtStart(new ccc.CellDep(new ccc.OutPoint(CellDepsTxHash, BigInt(0)), ccc.depTypeFrom("code")) as ccc.CellDepLike);
             await tx.completeInputsByUdt(signer, type);
             await tx.completeFeeBy(signer, 1000);
             const distributeTxHash = await signer.sendTransaction(tx);
@@ -227,8 +252,7 @@ export default function TransferXUdt() {
             let poolXudtAmount = BigInt(0);
             let poolXudtCell;
             const poolCells = [];
-            const boundingsLock = new ccc.Script("0xb310496be546e52f9319891b749bb9db7fec31356335feff7c6a5d0b13553333", "type", "0x85ea1f0465f2e0696d1441ee7f51d13d927145d662137088320225278362f91c");
-            const type = await ccc.Script.fromKnownScript(signer.client, ccc.KnownScript.XUdt, "0x85ea1f0465f2e0696d1441ee7f51d13d927145d662137088320225278362f91c");
+            const type = await ccc.Script.fromKnownScript(signer.client, ccc.KnownScript.XUdt, type_args);
 
             const boundingsCell = signer.client.findCells({
               script: boundingsLock,
@@ -272,7 +296,7 @@ export default function TransferXUdt() {
             });
 
             await tx.addCellDepsOfKnownScripts(signer.client, ccc.KnownScript.XUdt);
-            tx.addCellDepsAtStart(new ccc.CellDep(new ccc.OutPoint("0xf42e2febc2b07eb7c07a0824abcc38d6cf251cb10e17e3de37b4351f30ee24ec", BigInt(0)), ccc.depTypeFrom("code")) as ccc.CellDepLike);
+            tx.addCellDepsAtStart(new ccc.CellDep(new ccc.OutPoint(CellDepsTxHash, BigInt(0)), ccc.depTypeFrom("code")) as ccc.CellDepLike);
             await tx.completeInputsByUdt(signer, type);
             const balanceDiff =
                 (await tx.getInputsUdtBalance(signer.client, type)) -
