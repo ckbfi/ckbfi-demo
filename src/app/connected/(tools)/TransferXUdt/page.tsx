@@ -47,7 +47,7 @@ function getSellPriceAfterFee(currentXudtAmount:bigint, xudtAmount:bigint) {
 
 export default function TransferXUdt() {
   const { signer, createSender } = useApp();
-  const { log,error } = createSender("bonding-curve trade xUDT");
+  const { log } = createSender("bonding-curve trade xUDT");
 
   const { explorerTransaction } = useGetExplorerLink();
 
@@ -255,7 +255,7 @@ export default function TransferXUdt() {
             const poolCells = [];
             const type = await ccc.Script.fromKnownScript(signer.client, ccc.KnownScript.XUdt, type_args);
 
-            const boundingsCell = signer.client.findCells({
+            const boundingsCell = signer.client.findCellsOnChain({
               script: boundingsLock,
               scriptType: "lock",
               scriptSearchMode: "exact",
@@ -270,10 +270,10 @@ export default function TransferXUdt() {
             }
 
             const canGetCkbAmount = getSellPriceAfterFee(TOTAL_XUDT_SUPPLY - poolXudtAmount, sellAmount);
-            if (canGetCkbAmount < ccc.fixedPointFrom(64)) {
-              error("can not sell less than 64 CKB");
-              return;
-            }
+            // if (canGetCkbAmount < ccc.fixedPointFrom(64)) {
+            //   error("can not sell less than 64 CKB");
+            //   return;
+            // }
             let poolCkbCell;
             for (const cell of poolCells) {
               if (cell.cellOutput.capacity > canGetCkbAmount && cell.cellOutput.type == undefined) {
@@ -289,7 +289,7 @@ export default function TransferXUdt() {
               outputs: [
                 { capacity: ccc.fixedPointFrom(154), lock: boundingsLock, type },
                 { capacity: poolCkbCell!.cellOutput.capacity - canGetCkbAmount, lock: boundingsLock },
-                { capacity: canGetCkbAmount, lock },
+                { capacity: canGetCkbAmount + ccc.fixedPointFrom(144), lock },
               ],
               outputsData: [
                 ccc.numLeToBytes(udtBalanceFrom(poolXudtCell!.outputData) + sellAmount, 16),
@@ -310,7 +310,6 @@ export default function TransferXUdt() {
                 tx.addOutput(
                   {
                     lock,
-                    capacity: ccc.fixedPointFrom(144),
                     type,
                   },
                   ccc.numLeToBytes(balanceDiff, 16),
@@ -319,6 +318,7 @@ export default function TransferXUdt() {
             // Complete missing parts: Fill inputs
             await tx.completeInputsByCapacity(signer);
             await tx.completeFeeBy(signer, 1000);
+            console.log("tx", tx);
             const distributeTxHash = await signer.sendTransaction(tx);
             log("Transaction sent:", explorerTransaction(distributeTxHash));
           }}
