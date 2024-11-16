@@ -16,17 +16,17 @@ function getPrice(currentXudtAmount:bigint, xudtAmount:bigint) {
     console.log("xudtAmount", xudtAmount);
     currentXudtAmount = currentXudtAmount / BigInt(100_000_000);
     xudtAmount = xudtAmount / BigInt(100_000_000);
-    const dg = BigInt(91500000000000)
-    const uint128_400_000_000 = BigInt(1000);
+    const dg = BigInt(131500000000000)
+    const uint128_400_000_000 = BigInt(100000000);
     const uint128_1 = BigInt(1);
     const uint128_2 = BigInt(2);
 
     const sum1 = (currentXudtAmount + uint128_400_000_000 - uint128_1) *
-                 (currentXudtAmount + uint128_400_000_000)  *
-                 (uint128_2 * (currentXudtAmount + uint128_400_000_000) - uint128_1)/ dg;
+                 (currentXudtAmount + uint128_400_000_000) / dg *
+                 (uint128_2 * (currentXudtAmount + uint128_400_000_000) - uint128_1);
     const sum2 = (currentXudtAmount + uint128_400_000_000 + xudtAmount - uint128_1) *
-                 (currentXudtAmount + uint128_400_000_000 + xudtAmount) *
-                 (uint128_2 * (currentXudtAmount + uint128_400_000_000) + uint128_2 * xudtAmount - uint128_1)/ dg ;
+                 (currentXudtAmount + uint128_400_000_000 + xudtAmount)/ dg *
+                 (uint128_2 * (currentXudtAmount + uint128_400_000_000) + uint128_2 * xudtAmount - uint128_1);
     console.log("sum1", sum1);
     console.log("sum2", sum2);
     const summation = sum2 - sum1;
@@ -55,9 +55,10 @@ export default function TransferXUdt() {
   const [sellXudtAmount, setSellXudtAmount] = useState("");
   const [estimatedCkb, setEstimatedCkb] = useState("");
   const [estimatedCkbForSell, setEstimatedCkbForSell] = useState("");
-  const boundingsLock = new ccc.Script("0xbfd51997b37f85554e3dd9dbe6a229a1199a1f6e87c0acd888493de0c37b4ad1", "type", "0x756defe0217d1ba946cf67966498ec8d72cfe227632d3c3226dc38ee9ae4ee3d");
-  const type_args = "0x756defe0217d1ba946cf67966498ec8d72cfe227632d3c3226dc38ee9ae4ee3d";
-  const CellDepsTxHash = "0xac2f1326d766b07fda3abd4545c4d0f1bee61bc3dcd002553991ba89cb353faa"
+  const type_args = "0xf797c2badc75a1e604787c715f045f8a851fa811394ce2f23c501098f3f8bfce";
+  const boundingsLock = new ccc.Script("0x6bf85c3ae774fb56a2b3708d147b3f742f82596fe127033c2bde577c633e2227", "type", type_args);
+
+  const CellDepsTxHash = "0x2f426d10aeb75a02fe3ec22a084285b8b5d3a875d556c6edfc2ab9b9a003367b"
   //const type = await ccc.Script.fromKnownScript(signer.client, ccc.KnownScript.XUdt, "0x756defe0217d1ba946cf67966498ec8d72cfe227632d3c3226dc38ee9ae4ee3d");
   // 将type一开始就定义好，构造异步函数，然后在useEffect中调用
   
@@ -199,13 +200,13 @@ export default function TransferXUdt() {
               tx = ccc.Transaction.from({
                 inputs: [new ccc.CellInput(poolXudtCell!.outPoint, BigInt(0)), new ccc.CellInput(poolCkbCell!.outPoint, BigInt(0))],
                 outputs: [
-                  { capacity: ccc.fixedPointFrom(154), lock: boundingsLock, type },
+                  {  lock: boundingsLock, type },
                   { capacity: poolCkbCell!.cellOutput.capacity + shouldPayCkbAmount, lock: boundingsLock },
                   { capacity: ccc.fixedPointFrom(144), lock, type },
                 ],
                 outputsData: [
                   ccc.numLeToBytes(udtBalanceFrom(poolXudtCell!.outputData) - buyAmount, 16),
-                  ccc.numLeToBytes(0),
+                  "0x",
                   ccc.numLeToBytes(buyAmount, 16),
                 ]
               });
@@ -213,13 +214,13 @@ export default function TransferXUdt() {
               tx = ccc.Transaction.from({
                 inputs: [new ccc.CellInput(poolXudtCell!.outPoint, BigInt(0))],
                 outputs: [
-                  { capacity: ccc.fixedPointFrom(154), lock: boundingsLock, type },
-                  { capacity: shouldPayCkbAmount, lock: boundingsLock },
+                  { lock: boundingsLock, type },
+                  { capacity: shouldPayCkbAmount + BigInt(100*100000000), lock: boundingsLock },
                   { capacity: ccc.fixedPointFrom(144), lock, type },
                 ],
                 outputsData: [
                   ccc.numLeToBytes(udtBalanceFrom(poolXudtCell!.outputData) - buyAmount, 16),
-                  ccc.numLeToBytes(0),
+                  "0x",
                   ccc.numLeToBytes(buyAmount, 16),
                 ]
               });
@@ -250,7 +251,7 @@ export default function TransferXUdt() {
               );
             const sellAmount = ccc.fixedPointFrom(sellXudtAmount);
             let poolXudtAmount = BigInt(0);
-            let poolXudtCell;
+            let poolXudtCell:ccc.Cell | undefined;
             const poolCells = [];
             const type = await ccc.Script.fromKnownScript(signer.client, ccc.KnownScript.XUdt, type_args);
 
