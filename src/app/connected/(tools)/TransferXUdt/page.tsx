@@ -44,6 +44,53 @@ function getSellPriceAfterFee(currentXudtAmount:bigint, xudtAmount:bigint) {
     const fee = price * BigInt(500) / BigInt(10_000);
     return price - fee;
 }
+function findAmount(
+  supply: bigint,
+  targetSummation: bigint,
+  maxIterations: number = 10000,
+  action: 'buy' | 'sell' = 'sell'
+): bigint | null {
+  let low = BigInt(0); // 都是指xudt的数量
+  let high = BigInt(2*800_000_000 * 100_000_000); // 设定一个较大的初始上界
+  let iterations = 0;
+  let bestMid: bigint | null = null;
+  let bestDifference = targetSummation; // 初始为最大可能的差值
+
+  while (low <= high && iterations < maxIterations) {
+      const mid = (low + high) / BigInt(2);
+
+      let currentSummation: bigint;
+      if (action === 'buy') {
+          currentSummation = getBuyPriceAfterFee(supply, mid);
+      } else if (action === 'sell') {
+          currentSummation = getSellPriceAfterFee(supply, mid);
+      } else {
+          throw new Error("Action must be 'buy' or 'sell'");
+      }
+
+      const difference = targetSummation - currentSummation;
+
+      if (currentSummation <= targetSummation) {
+          if (bestMid === null || difference < bestDifference) {
+              bestDifference = difference;
+              bestMid = mid;
+          }
+      }
+
+      if (currentSummation < targetSummation) {
+          low = mid + BigInt(1);
+      } else {
+          high = mid - BigInt(1);
+      }
+      console.log('currentSummation', currentSummation);
+      iterations++;
+  }
+
+  console.log('Max iterations reached', iterations);
+  console.log('Best mid', bestMid);
+  return bestMid; // 返回最优解
+}
+
 
 export default function TransferXUdt() {
   const { signer, createSender } = useApp();
@@ -55,6 +102,7 @@ export default function TransferXUdt() {
   const [sellXudtAmount, setSellXudtAmount] = useState("");
   const [estimatedCkb, setEstimatedCkb] = useState("");
   const [estimatedCkbForSell, setEstimatedCkbForSell] = useState("");
+  const [ckbAmount, setCkbAmount] = useState(""); // 新增的CKB输入框状态
   const type_args = "0xf797c2badc75a1e604787c715f045f8a851fa811394ce2f23c501098f3f8bfce";
   const boundingsLock = new ccc.Script("0x6bf85c3ae774fb56a2b3708d147b3f742f82596fe127033c2bde577c633e2227", "type", type_args);
 
@@ -96,7 +144,11 @@ export default function TransferXUdt() {
       setEstimatedCkb(ccc.fixedPointToString(shouldPayCkbAmount, 8));
     };
 
+    const intervalId = setInterval(calculateEstimatedCkb, 3000);
     calculateEstimatedCkb();
+
+    return () => clearInterval(intervalId);
+
   }, [buyXudtAmount, signer]);
 
   useEffect(() => {
@@ -133,12 +185,63 @@ export default function TransferXUdt() {
       console.log("canGetCkbAmount", canGetCkbAmount);
       setEstimatedCkbForSell(ccc.fixedPointToString(canGetCkbAmount, 8));
     };
-
+    const intervalId = setInterval(calculateEstimatedCkbForSell, 3000);
     calculateEstimatedCkbForSell();
+
+    return () => clearInterval(intervalId);
   }, [sellXudtAmount, signer]);
+
+  useEffect(() => {
+    const calculateEstimatedXudt = async () => {
+      if (ckbAmount === "") {
+        return;
+      }
+      const targetSummation = ccc.fixedPointFrom(ckbAmount);
+      let poolXudtAmount = BigInt(0);
+
+      if (!signer) {
+        return;
+      }
+      const type = await ccc.Script.fromKnownScript(signer.client, ccc.KnownScript.XUdt, type_args);
+
+      const poolCells = [];
+      const boundingsCell = signer.client.findCellsOnChain({
+        script: boundingsLock,
+        scriptType: "lock",
+        scriptSearchMode: "exact",
+      });
+
+      for await (const cell of boundingsCell) {
+        poolCells.push(cell);
+        if (cell.cellOutput.type?.args === type.args) {
+          poolXudtAmount += udtBalanceFrom(cell.outputData);
+        }
+      }
+      
+      const xudtAmount = findAmount(TOTAL_XUDT_SUPPLY - poolXudtAmount, targetSummation, 10000, 'buy');
+      console.log("xudtAmount", xudtAmount);
+      setBuyXudtAmount(ccc.fixedPointToString(xudtAmount || BigInt(0), 8));
+      // setEstimatedXudt(ccc.fixedPointToString(xudtAmount || BigInt(0), 8));
+    };
+
+    const intervalId = setInterval(calculateEstimatedXudt, 3000);
+    calculateEstimatedXudt();
+
+    return () => clearInterval(intervalId);
+
+    
+  }, [ckbAmount, signer]);
 
   return (
     <div className="flex w-full flex-col items-stretch">
+    <TextInput
+        label="Enter CKB Amount"
+        placeholder="Amount of CKB to spend"
+        state={[ckbAmount, setCkbAmount]}
+      />
+      <div className="mt-2">
+        <span>Estimated xUDT to Receive: {buyXudtAmount}</span>
+      </div>
       <TextInput
         label="Buy BCTK"
         placeholder="Amount of xUDT to buy"
