@@ -103,10 +103,10 @@ export default function TransferXUdt() {
   const [estimatedCkb, setEstimatedCkb] = useState("");
   const [estimatedCkbForSell, setEstimatedCkbForSell] = useState("");
   const [ckbAmount, setCkbAmount] = useState(""); // 新增的CKB输入框状态
-  const type_args = "0xf797c2badc75a1e604787c715f045f8a851fa811394ce2f23c501098f3f8bfce";
-  const boundingsLock = new ccc.Script("0x6bf85c3ae774fb56a2b3708d147b3f742f82596fe127033c2bde577c633e2227", "type", type_args);
+  const type_args = "0xa2e751b07efa0cf444106c4c08945fd8ecef54445238d5869ec39d206ca8ea3f";
+  const boundingsLock = new ccc.Script("0xa62a14d6bcf2d90d4ed760354d28b13872035215c4d85afe10fe56221814649d", "type", type_args);
 
-  const CellDepsTxHash = "0x2f426d10aeb75a02fe3ec22a084285b8b5d3a875d556c6edfc2ab9b9a003367b"
+  const CellDepsTxHash = "0xd6a1ba4b8e43384e490615715b768883c1e5f28b2f54d501eb62272d0011879d"
   //const type = await ccc.Script.fromKnownScript(signer.client, ccc.KnownScript.XUdt, "0x756defe0217d1ba946cf67966498ec8d72cfe227632d3c3226dc38ee9ae4ee3d");
   // 将type一开始就定义好，构造异步函数，然后在useEffect中调用
   
