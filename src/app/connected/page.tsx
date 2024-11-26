@@ -11,6 +11,7 @@ const TABS: [ReactNode, string, keyof typeof icons, string][] = [
   ["Sign", "/connected/Sign", "Signature", "text-orange-500"],
   ["Transfer", "/connected/Transfer", "ArrowLeftRight", "text-lime-500"],
   ["bonding curve trade", "/connected/TransferXUdt", "BadgeCent", "text-emerald-500"],
+  ["bonding curve V2 trade", "/connected/v2Trade", "BadgeCent", "text-emerald-500"],
 ];
 /* eslint-enable react/jsx-key */
 

@@ -91,6 +91,67 @@ function findAmount(
   return bestMid; // 返回最优解
 }
 
+function constructArgs(
+  userPubkey: string,
+  xudtArgs: string,
+  slipPoint: number,
+  desiredAmount: bigint
+): string {
+  // Helper function to decode a hex string to a byte array
+  function hexToBytes(hex: string): Uint8Array {
+      if (hex.startsWith('0x')) {
+          hex = hex.slice(2);
+      }
+      const bytes = new Uint8Array(hex.length / 2);
+      for (let i = 0; i < bytes.length; i++) {
+          bytes[i] = parseInt(hex.substr(i * 2, 2), 16);
+      }
+      return bytes;
+  }
+
+  // Helper function to convert a number to a byte array (big-endian)
+  function numberToBytesBE(num: number, byteLength: number): Uint8Array {
+      const bytes = new Uint8Array(byteLength);
+      for (let i = byteLength - 1; i >= 0; i--) {
+          bytes[i] = num & 0xff;
+          num >>= 8;
+      }
+      return bytes;
+  }
+
+  // Helper function to convert a bigint to a byte array (big-endian)
+  function bigintToBytesBE(bigint: bigint, byteLength: number): Uint8Array {
+      const bytes = new Uint8Array(byteLength);
+      const byteMask = BigInt(0xff); // 使用 BigInt 构造函数
+      const byteShift = BigInt(8); // 使用 BigInt 构造函数
+      for (let i = byteLength - 1; i >= 0; i--) {
+          bytes[i] = Number(bigint & byteMask);
+          bigint >>= byteShift;
+      }
+      return bytes;
+  }
+
+  // Decode the hex strings to byte arrays
+  const userPubkeyBytes = hexToBytes(userPubkey);
+  const xudtArgsBytes = hexToBytes(xudtArgs);
+
+  // Convert slipPoint and desiredAmount to byte arrays
+  const slipPointBytes = numberToBytesBE(slipPoint, 2);
+  const desiredAmountBytes = bigintToBytesBE(desiredAmount, 16);
+
+  // Concatenate all byte arrays
+  const args = new Uint8Array(
+      userPubkeyBytes.length + xudtArgsBytes.length + slipPointBytes.length + desiredAmountBytes.length
+  );
+  args.set(userPubkeyBytes, 0);
+  args.set(xudtArgsBytes, userPubkeyBytes.length);
+  args.set(slipPointBytes, userPubkeyBytes.length + xudtArgsBytes.length);
+  args.set(desiredAmountBytes, userPubkeyBytes.length + xudtArgsBytes.length + slipPointBytes.length);
+
+  // Convert the concatenated byte array to a hex string
+  return '0x' + Array.from(args).map(byte => byte.toString(16).padStart(2, '0')).join('');
+}
+
 
 export default function TransferXUdt() {
   const { signer, createSender } = useApp();
@@ -104,9 +165,13 @@ export default function TransferXUdt() {
   const [estimatedCkbForSell, setEstimatedCkbForSell] = useState("");
   const [ckbAmount, setCkbAmount] = useState(""); // 新增的CKB输入框状态
   const type_args = "0x98ea8f018c7b180a72fff7c592df0f5b239fae0ef9893ed8754c2c32ee7efdfe";
-  const boundingsLock = new ccc.Script("0xa62a14d6bcf2d90d4ed760354d28b13872035215c4d85afe10fe56221814649d", "type", type_args);
+  const bondings_code_hash="0xb1f9e1dcd0888173dec19f244edba61780536dbe75431c91519f96b9dcaae5a1"
+  const boundingsLock = new ccc.Script(bondings_code_hash, "type", type_args);
+  const order_code_hash = "0xbc1d00094c1741a573599bfc15b6b192f0ff1546b44cc1c6d3c093c1f49e95ec"
+  const ckb_args="0x0000000000000000000000000000000000000000000000000000000000000000"
 
-  const CellDepsTxHash = "0xd6a1ba4b8e43384e490615715b768883c1e5f28b2f54d501eb62272d0011879d"
+
+  // const CellDepsTxHash = "0xd6a1ba4b8e43384e490615715b768883c1e5f28b2f54d501eb62272d0011879d"
   //const type = await ccc.Script.fromKnownScript(signer.client, ccc.KnownScript.XUdt, "0x756defe0217d1ba946cf67966498ec8d72cfe227632d3c3226dc38ee9ae4ee3d");
   // 将type一开始就定义好，构造异步函数，然后在useEffect中调用
   
@@ -294,50 +359,52 @@ export default function TransferXUdt() {
                 poolXudtCell = cell;
               }
             }
+            console.log("poolXudtCell", poolXudtCell);
 
             const shouldPayCkbAmount = getBuyPriceAfterFee(TOTAL_XUDT_SUPPLY - poolXudtAmount, buyAmount);
+            console.log("shouldPayCkbAmount", shouldPayCkbAmount);
             let poolCkbCell;
             for (const cell of poolCells) {
               if (cell.cellOutput.type == undefined) {
                 poolCkbCell = cell;
               }
             }
-            let tx: ccc.Transaction;
-            if (poolCkbCell){
-              tx = ccc.Transaction.from({
-                inputs: [new ccc.CellInput(poolXudtCell!.outPoint, BigInt(0)), new ccc.CellInput(poolCkbCell!.outPoint, BigInt(0))],
-                outputs: [
-                  {  lock: boundingsLock, type },
-                  { capacity: poolCkbCell!.cellOutput.capacity + shouldPayCkbAmount, lock: boundingsLock },
-                  { capacity: ccc.fixedPointFrom(144), lock, type },
-                ],
-                outputsData: [
-                  ccc.numLeToBytes(udtBalanceFrom(poolXudtCell!.outputData) - buyAmount, 16),
-                  "0x",
-                  ccc.numLeToBytes(buyAmount, 16),
-                ]
-              });
-            }else {
-              tx = ccc.Transaction.from({
-                inputs: [new ccc.CellInput(poolXudtCell!.outPoint, BigInt(0))],
-                outputs: [
-                  { lock: boundingsLock, type },
-                  { capacity: shouldPayCkbAmount + BigInt(100*100000000), lock: boundingsLock },
-                  { capacity: ccc.fixedPointFrom(144), lock, type },
-                ],
-                outputsData: [
-                  ccc.numLeToBytes(udtBalanceFrom(poolXudtCell!.outputData) - buyAmount, 16),
-                  "0x",
-                  ccc.numLeToBytes(buyAmount, 16),
-                ]
-              });
-            }
+            console.log("poolCkbCell", poolCkbCell);
+            // 默认1%的滑点
+            const order_lock_args = constructArgs(lock.args,type_args,100,buyAmount)
+            console.log("order_lock_args",order_lock_args);
+            const orderLock =new ccc.Script(order_code_hash,"type",order_lock_args as ccc.Hex)
+            // let tx: ccc.Transaction;
+            const tx = ccc.Transaction.from({
+              inputs: [],
+              outputs: [
+                // 订单锁，其中144为xudt的包装费，should_pay_ckb_amount为支付到pool的数量
+                {  capacity:ccc.fixedPointFrom(144)+shouldPayCkbAmount,lock:orderLock },
+              ],
+            });
+            // if (poolCkbCell){
+              
+            // }else {
+            //   tx = ccc.Transaction.from({
+            //     inputs: [new ccc.CellInput(poolXudtCell!.outPoint, BigInt(0))],
+            //     outputs: [
+            //       { lock: boundingsLock, type },
+            //       { capacity: shouldPayCkbAmount + BigInt(100*100000000), lock: boundingsLock },
+            //       { capacity: ccc.fixedPointFrom(144), lock, type },
+            //     ],
+            //     outputsData: [
+            //       ccc.numLeToBytes(udtBalanceFrom(poolXudtCell!.outputData) - buyAmount, 16),
+            //       "0x",
+            //       ccc.numLeToBytes(buyAmount, 16),
+            //     ]
+            //   });
+            // }
 
             
 
-            await tx.addCellDepsOfKnownScripts(signer.client, ccc.KnownScript.XUdt);
-            tx.addCellDepsAtStart(new ccc.CellDep(new ccc.OutPoint(CellDepsTxHash, BigInt(0)), ccc.depTypeFrom("code")) as ccc.CellDepLike);
-            await tx.completeInputsByUdt(signer, type);
+            // await tx.addCellDepsOfKnownScripts(signer.client, ccc.KnownScript.XUdt);
+            // tx.addCellDepsAtStart(new ccc.CellDep(new ccc.OutPoint(CellDepsTxHash, BigInt(0)), ccc.depTypeFrom("code")) as ccc.CellDepLike);
+            // await tx.completeInputsByUdt(signer, type);
             await tx.completeFeeBy(signer, 1000);
             const distributeTxHash = await signer.sendTransaction(tx);
             log("Transaction sent:", explorerTransaction(distributeTxHash));
@@ -375,8 +442,11 @@ export default function TransferXUdt() {
                 poolXudtCell = cell;
               }
             }
-            
+            console.log("poolXudtCell", poolXudtCell);
             const canGetCkbAmount = getSellPriceAfterFee(TOTAL_XUDT_SUPPLY - poolXudtAmount, sellAmount);
+            console.log("canGetCkbAmount", canGetCkbAmount);
+            const order_lock_args = constructArgs(lock.args,ckb_args,100,canGetCkbAmount)
+            const orderLock =new ccc.Script(order_code_hash,"type",order_lock_args as ccc.Hex)
             // if (canGetCkbAmount < ccc.fixedPointFrom(64)) {
             //   error("can not sell less than 64 CKB");
             //   return;
@@ -387,24 +457,22 @@ export default function TransferXUdt() {
                 poolCkbCell = cell;
               }
             }
+            console.log("poolCkbCell", poolCkbCell);
 
             const tx = ccc.Transaction.from({
               inputs: [
-                new ccc.CellInput(poolXudtCell!.outPoint, BigInt(0)),
-                new ccc.CellInput(poolCkbCell!.outPoint, BigInt(0)),
               ],
               outputs: [
-                { capacity: ccc.fixedPointFrom(154), lock: boundingsLock, type },
-                { capacity: poolCkbCell!.cellOutput.capacity - canGetCkbAmount, lock: boundingsLock },
-                { capacity: canGetCkbAmount + ccc.fixedPointFrom(144), lock },
+                // 订单锁，其中144为xudt的包装费，should_pay_ckb_amount为支付到pool的数量
+                  {  lock:orderLock,type },
               ],
               outputsData: [
-                ccc.numLeToBytes(udtBalanceFrom(poolXudtCell!.outputData) + sellAmount, 16),
+                ccc.numLeToBytes(sellAmount,16),
               ]
             });
 
             await tx.addCellDepsOfKnownScripts(signer.client, ccc.KnownScript.XUdt);
-            tx.addCellDepsAtStart(new ccc.CellDep(new ccc.OutPoint(CellDepsTxHash, BigInt(0)), ccc.depTypeFrom("code")) as ccc.CellDepLike);
+            // tx.addCellDepsAtStart(new ccc.CellDep(new ccc.OutPoint(CellDepsTxHash, BigInt(0)), ccc.depTypeFrom("code")) as ccc.CellDepLike);
             await tx.completeInputsByUdt(signer, type);
             const balanceDiff =
                 (await tx.getInputsUdtBalance(signer.client, type)) -
