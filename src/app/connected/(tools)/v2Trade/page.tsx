@@ -9,39 +9,40 @@ import { useApp } from "../../../context";
 import { ButtonsPanel } from "../../../components/ButtonsPanel";
 import { udtBalanceFrom } from "@ckb-ccc/connector-react";
 
-const TOTAL_XUDT_SUPPLY = BigInt(800_000_000) * BigInt(100_000_000);
+const TOTAL_XUDT_SUPPLY = BigInt(731000000) * BigInt(100_000_000);
 
 function getPrice(currentXudtAmount:bigint, xudtAmount:bigint) {
     // console.log("currentXudtAmount", currentXudtAmount);
     // console.log("xudtAmount", xudtAmount);
     currentXudtAmount = currentXudtAmount / BigInt(100_000_000);
     xudtAmount = xudtAmount / BigInt(100_000_000);
-    const dg = BigInt(131500000000000)
+    const dg = BigInt(114500000000000)
     const uint128_400_000_000 = BigInt(100000000);
     const uint128_1 = BigInt(1);
     const uint128_2 = BigInt(2);
 
     const sum1 = (currentXudtAmount + uint128_400_000_000 - uint128_1) *
-                 (currentXudtAmount + uint128_400_000_000) / dg *
-                 (uint128_2 * (currentXudtAmount + uint128_400_000_000) - uint128_1);
+                 (currentXudtAmount + uint128_400_000_000)  *
+                 (uint128_2 * (currentXudtAmount + uint128_400_000_000) - uint128_1)/ dg;
     const sum2 = (currentXudtAmount + uint128_400_000_000 + xudtAmount - uint128_1) *
-                 (currentXudtAmount + uint128_400_000_000 + xudtAmount)/ dg *
-                 (uint128_2 * (currentXudtAmount + uint128_400_000_000) + uint128_2 * xudtAmount - uint128_1);
+                 (currentXudtAmount + uint128_400_000_000 + xudtAmount) *
+                 (uint128_2 * (currentXudtAmount + uint128_400_000_000) + uint128_2 * xudtAmount - uint128_1)/ dg;
     // console.log("sum1", sum1);
     // console.log("sum2", sum2);
     const summation = sum2 - sum1;
+    // console.log("summation", summation);
     return summation;
 }
 
 function getBuyPriceAfterFee(currentXudtAmount:bigint, xudtAmount:bigint) {
     const price = getPrice(currentXudtAmount, xudtAmount);
-    const fee = price * BigInt(500) / BigInt(10_000);
+    const fee = price * BigInt(250) / BigInt(10_000);
     return price + fee;
 }
 
 function getSellPriceAfterFee(currentXudtAmount:bigint, xudtAmount:bigint) {
     const price = getPrice(currentXudtAmount-xudtAmount,xudtAmount );
-    const fee = price * BigInt(500) / BigInt(10_000);
+    const fee = price * BigInt(250) / BigInt(10_000);
     return price - fee;
 }
 function findAmount(
@@ -152,6 +153,57 @@ function constructArgs(
   return '0x' + Array.from(args).map(byte => byte.toString(16).padStart(2, '0')).join('');
 }
 
+function parseArgs(hexString: string) {
+  // Helper function to convert a byte array to a hex string
+  function bytesToHex(bytes: Uint8Array): string {
+      return Array.from(bytes).map(byte => byte.toString(16).padStart(2, '0')).join('');
+  }
+
+  // Helper function to convert a byte array to a number (big-endian)
+  function bytesToNumberBE(bytes: Uint8Array): number {
+      let num = 0;
+      for (let i = 0; i < bytes.length; i++) {
+          num = (num << 8) | bytes[i];
+      }
+      return num;
+  }
+
+  // Helper function to convert a byte array to a bigint (big-endian)
+  function bytesToBigIntBE(bytes: Uint8Array): bigint {
+      let bigint = BigInt(0);
+      for (let i = 0; i < bytes.length; i++) {
+          bigint = (bigint << BigInt(8)) | BigInt(bytes[i]);
+      }
+      return bigint;
+  }
+
+  // Remove the '0x' prefix if present
+  if (hexString.startsWith('0x')) {
+      hexString = hexString.slice(2);
+  }
+
+  // Convert the hex string to a byte array
+  const args = new Uint8Array(hexString.match(/.{1,2}/g)?.map(byte => parseInt(byte, 16)) || []);
+
+  // Extract the userPubkey (32 bytes), xudtArgs (32 bytes), slipPoint (2 bytes), and desiredAmount (16 bytes)
+  const userPubkeyBytes = args.slice(0, 32);
+  const xudtArgsBytes = args.slice(32, 64);
+  const slipPointBytes = args.slice(64, 66);
+  const desiredAmountBytes = args.slice(66, 82);
+
+  // Convert byte arrays back to their original values
+  const userPubkey = '0x' + bytesToHex(userPubkeyBytes);
+  const xudtArgs = '0x' + bytesToHex(xudtArgsBytes);
+  const slipPoint = bytesToNumberBE(slipPointBytes);
+  const desiredAmount = bytesToBigIntBE(desiredAmountBytes);
+
+  return {
+      userPubkey,
+      xudtArgs,
+      slipPoint,
+      desiredAmount
+  };
+}
 
 export default function TransferXUdt() {
   const { signer, createSender } = useApp();
@@ -164,10 +216,10 @@ export default function TransferXUdt() {
   const [estimatedCkb, setEstimatedCkb] = useState("");
   const [estimatedCkbForSell, setEstimatedCkbForSell] = useState("");
   const [ckbAmount, setCkbAmount] = useState(""); // 新增的CKB输入框状态
-  const type_args = "0x98ea8f018c7b180a72fff7c592df0f5b239fae0ef9893ed8754c2c32ee7efdfe";
-  const bondings_code_hash="0xb1f9e1dcd0888173dec19f244edba61780536dbe75431c91519f96b9dcaae5a1"
+  const type_args = "0xd0ff6a66d00ad1ad22ed39f32fbe91bf6b0bd7f00ed9df30c554e6c8e8aaacc4";
+  const bondings_code_hash="0xaf6a0ad416b015d3f8d73969dcaffa9c02dff30c0673ac122194430423928ce2"
   const boundingsLock = new ccc.Script(bondings_code_hash, "type", type_args);
-  const order_code_hash = "0xbc1d00094c1741a573599bfc15b6b192f0ff1546b44cc1c6d3c093c1f49e95ec"
+  const order_code_hash = "0x7c100d9b899cb8d0fd3a300e4a71caab2ef84dbc7065c237b3870bf49ad596e4"
   const ckb_args="0x0000000000000000000000000000000000000000000000000000000000000000"
 
 
@@ -206,7 +258,10 @@ export default function TransferXUdt() {
           poolXudtAmount += udtBalanceFrom(cell.outputData);
         }
       }
-
+      console.log(`poolXudtAmount: ${poolXudtAmount},totalXudtSupply-poolXudtAmount: ${TOTAL_XUDT_SUPPLY - poolXudtAmount}`);
+      // console.log("buyAmount", buyAmount);
+      // console.log("findAmout", findAmount(TOTAL_XUDT_SUPPLY - poolXudtAmount, BigInt(159600), 10000, 'buy'));
+      console.log("totalXudtSupply", TOTAL_XUDT_SUPPLY);
       const shouldPayCkbAmount = getBuyPriceAfterFee(TOTAL_XUDT_SUPPLY - poolXudtAmount, buyAmount);
       console.log("shouldPayCkbAmount", shouldPayCkbAmount);
       setEstimatedCkb(ccc.fixedPointToString(shouldPayCkbAmount, 8));
@@ -286,7 +341,7 @@ export default function TransferXUdt() {
           poolXudtAmount += udtBalanceFrom(cell.outputData);
         }
       }
-      
+      console.log(`inputckbAmount: ${targetSummation},poolXudtAmount: ${poolXudtAmount},totalXudtSupply-poolXudtAmount: ${TOTAL_XUDT_SUPPLY - poolXudtAmount}`);
       const xudtAmount = findAmount(TOTAL_XUDT_SUPPLY - poolXudtAmount, targetSummation, 10000, 'buy');
       console.log("xudtAmount", xudtAmount);
       setBuyXudtAmount(ccc.fixedPointToString(xudtAmount || BigInt(0), 8));
@@ -360,6 +415,10 @@ export default function TransferXUdt() {
               }
             }
             console.log("poolXudtCell", poolXudtCell);
+            // if (poolXudtAmount < buyAmount) {
+            //   error("Not enough xUDT in the pool");
+            //   return;
+            // }
 
             const shouldPayCkbAmount = getBuyPriceAfterFee(TOTAL_XUDT_SUPPLY - poolXudtAmount, buyAmount);
             console.log("shouldPayCkbAmount", shouldPayCkbAmount);
@@ -371,8 +430,11 @@ export default function TransferXUdt() {
             }
             console.log("poolCkbCell", poolCkbCell);
             // 默认1%的滑点
-            const order_lock_args = constructArgs(lock.args,type_args,100,buyAmount)
+            
+            const order_lock_args = constructArgs(lock.hash(),type_args,9900,buyAmount)
             console.log("order_lock_args",order_lock_args);
+            const parsedArgs = parseArgs(order_lock_args)
+            console.log(`userPubkey: ${parsedArgs.userPubkey}, xudtArgs: ${parsedArgs.xudtArgs}, slipPoint: ${parsedArgs.slipPoint}, desiredAmount: ${parsedArgs.desiredAmount}`);
             const orderLock =new ccc.Script(order_code_hash,"type",order_lock_args as ccc.Hex)
             // let tx: ccc.Transaction;
             const tx = ccc.Transaction.from({
@@ -445,7 +507,10 @@ export default function TransferXUdt() {
             console.log("poolXudtCell", poolXudtCell);
             const canGetCkbAmount = getSellPriceAfterFee(TOTAL_XUDT_SUPPLY - poolXudtAmount, sellAmount);
             console.log("canGetCkbAmount", canGetCkbAmount);
-            const order_lock_args = constructArgs(lock.args,ckb_args,100,canGetCkbAmount)
+            const order_lock_args = constructArgs(lock.hash(),ckb_args,9900,canGetCkbAmount)
+            console.log("order_lock_args",order_lock_args);
+            const parsedArgs = parseArgs(order_lock_args)
+            console.log(`userPubkey: ${parsedArgs.userPubkey}, xudtArgs: ${parsedArgs.xudtArgs}, slipPoint: ${parsedArgs.slipPoint}, desiredAmount: ${parsedArgs.desiredAmount}`);
             const orderLock =new ccc.Script(order_code_hash,"type",order_lock_args as ccc.Hex)
             // if (canGetCkbAmount < ccc.fixedPointFrom(64)) {
             //   error("can not sell less than 64 CKB");

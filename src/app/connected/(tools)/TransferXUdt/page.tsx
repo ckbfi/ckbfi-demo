@@ -27,8 +27,8 @@ function getPrice(currentXudtAmount:bigint, xudtAmount:bigint) {
     const sum2 = (currentXudtAmount + uint128_400_000_000 + xudtAmount - uint128_1) *
                  (currentXudtAmount + uint128_400_000_000 + xudtAmount)/ dg *
                  (uint128_2 * (currentXudtAmount + uint128_400_000_000) + uint128_2 * xudtAmount - uint128_1);
-    // console.log("sum1", sum1);
-    // console.log("sum2", sum2);
+    console.log("sum1", sum1);
+    console.log("sum2", sum2);
     const summation = sum2 - sum1;
     return summation;
 }
