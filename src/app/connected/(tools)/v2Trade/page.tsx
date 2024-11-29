@@ -216,10 +216,10 @@ export default function TransferXUdt() {
   const [estimatedCkb, setEstimatedCkb] = useState("");
   const [estimatedCkbForSell, setEstimatedCkbForSell] = useState("");
   const [ckbAmount, setCkbAmount] = useState(""); // 新增的CKB输入框状态
-  const type_args = "0xd0ff6a66d00ad1ad22ed39f32fbe91bf6b0bd7f00ed9df30c554e6c8e8aaacc4";
-  const bondings_code_hash="0xaf6a0ad416b015d3f8d73969dcaffa9c02dff30c0673ac122194430423928ce2"
+  const type_args = "0x9e3afdb11b10043a93ec81a15bc14a0127e685c105b20f749f5d9104c0728f57";
+  const bondings_code_hash="0xf16ab9760b01574911c6636be646c3e2e6b1d2e1eb868d0f2aa44890e583475b"
   const boundingsLock = new ccc.Script(bondings_code_hash, "type", type_args);
-  const order_code_hash = "0x7c100d9b899cb8d0fd3a300e4a71caab2ef84dbc7065c237b3870bf49ad596e4"
+  const order_code_hash = "0xeca2d82fe00581883c038f00eb5b8f8b79f21e4f4a9c52cd952d50f1f4afc765"
   const ckb_args="0x0000000000000000000000000000000000000000000000000000000000000000"
 
 
@@ -431,7 +431,7 @@ export default function TransferXUdt() {
             console.log("poolCkbCell", poolCkbCell);
             // 默认1%的滑点
             
-            const order_lock_args = constructArgs(lock.hash(),type_args,9900,buyAmount)
+            const order_lock_args = constructArgs(lock.hash(),type_args,10000,buyAmount)
             console.log("order_lock_args",order_lock_args);
             const parsedArgs = parseArgs(order_lock_args)
             console.log(`userPubkey: ${parsedArgs.userPubkey}, xudtArgs: ${parsedArgs.xudtArgs}, slipPoint: ${parsedArgs.slipPoint}, desiredAmount: ${parsedArgs.desiredAmount}`);
