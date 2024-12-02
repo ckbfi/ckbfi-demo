@@ -10,6 +10,7 @@ import { ButtonsPanel } from "../../../components/ButtonsPanel";
 import { udtBalanceFrom } from "@ckb-ccc/connector-react";
 
 const TOTAL_XUDT_SUPPLY = BigInt(731000000) * BigInt(100_000_000);
+const XUDT_LAUNCH_AMOUNT = BigInt(200000000) * BigInt(100_000_000);
 
 function getPrice(currentXudtAmount:bigint, xudtAmount:bigint) {
     // console.log("currentXudtAmount", currentXudtAmount);
@@ -216,11 +217,15 @@ export default function TransferXUdt() {
   const [estimatedCkb, setEstimatedCkb] = useState("");
   const [estimatedCkbForSell, setEstimatedCkbForSell] = useState("");
   const [ckbAmount, setCkbAmount] = useState(""); // 新增的CKB输入框状态
-  const type_args = "0x9e3afdb11b10043a93ec81a15bc14a0127e685c105b20f749f5d9104c0728f57";
-  const bondings_code_hash="0xf16ab9760b01574911c6636be646c3e2e6b1d2e1eb868d0f2aa44890e583475b"
-  const boundingsLock = new ccc.Script(bondings_code_hash, "type", type_args);
+  const type_args = "0xd2e083564139f535c3a3b08c792f21ad63305087970d447f6e301d49987d8815";
+  const bondings_code_hash="0xa161a8cb20ba6b79e86f297d5c5c8a44681a521fe08bf352ab5c9401a8a66606"
+  const aggregator_hash = "0x584456c9438f03a19efb8bdfac19361bb6a6b507eefa41a286e154bfb4b9e1b4"
+  const bondings_lock_args = type_args+aggregator_hash.slice(2)
+  const boundingsLock = new ccc.Script(bondings_code_hash, "type", bondings_lock_args as ccc.Hex);
   const order_code_hash = "0xeca2d82fe00581883c038f00eb5b8f8b79f21e4f4a9c52cd952d50f1f4afc765"
   const ckb_args="0x0000000000000000000000000000000000000000000000000000000000000000"
+  
+  
 
 
   // const CellDepsTxHash = "0xd6a1ba4b8e43384e490615715b768883c1e5f28b2f54d501eb62272d0011879d"
@@ -258,11 +263,11 @@ export default function TransferXUdt() {
           poolXudtAmount += udtBalanceFrom(cell.outputData);
         }
       }
-      console.log(`poolXudtAmount: ${poolXudtAmount},totalXudtSupply-poolXudtAmount: ${TOTAL_XUDT_SUPPLY - poolXudtAmount}`);
+      console.log(`poolXudtAmount: ${poolXudtAmount},totalXudtSupply-poolXudtAmount: ${XUDT_LAUNCH_AMOUNT + TOTAL_XUDT_SUPPLY - poolXudtAmount}`);
       // console.log("buyAmount", buyAmount);
       // console.log("findAmout", findAmount(TOTAL_XUDT_SUPPLY - poolXudtAmount, BigInt(159600), 10000, 'buy'));
       console.log("totalXudtSupply", TOTAL_XUDT_SUPPLY);
-      const shouldPayCkbAmount = getBuyPriceAfterFee(TOTAL_XUDT_SUPPLY - poolXudtAmount, buyAmount);
+      const shouldPayCkbAmount = getBuyPriceAfterFee(XUDT_LAUNCH_AMOUNT+TOTAL_XUDT_SUPPLY - poolXudtAmount, buyAmount);
       console.log("shouldPayCkbAmount", shouldPayCkbAmount);
       setEstimatedCkb(ccc.fixedPointToString(shouldPayCkbAmount, 8));
     };
@@ -304,7 +309,7 @@ export default function TransferXUdt() {
       }
       console.log("poolXudtAmount", poolXudtAmount);
       
-      const canGetCkbAmount = getSellPriceAfterFee(TOTAL_XUDT_SUPPLY - poolXudtAmount, sellAmount);
+      const canGetCkbAmount = getSellPriceAfterFee(XUDT_LAUNCH_AMOUNT + TOTAL_XUDT_SUPPLY - poolXudtAmount, sellAmount);
       console.log("canGetCkbAmount", canGetCkbAmount);
       setEstimatedCkbForSell(ccc.fixedPointToString(canGetCkbAmount, 8));
     };
@@ -342,7 +347,7 @@ export default function TransferXUdt() {
         }
       }
       console.log(`inputckbAmount: ${targetSummation},poolXudtAmount: ${poolXudtAmount},totalXudtSupply-poolXudtAmount: ${TOTAL_XUDT_SUPPLY - poolXudtAmount}`);
-      const xudtAmount = findAmount(TOTAL_XUDT_SUPPLY - poolXudtAmount, targetSummation, 10000, 'buy');
+      const xudtAmount = findAmount(XUDT_LAUNCH_AMOUNT + TOTAL_XUDT_SUPPLY - poolXudtAmount, targetSummation, 10000, 'buy');
       console.log("xudtAmount", xudtAmount);
       setBuyXudtAmount(ccc.fixedPointToString(xudtAmount || BigInt(0), 8));
       // setEstimatedXudt(ccc.fixedPointToString(xudtAmount || BigInt(0), 8));
@@ -420,7 +425,7 @@ export default function TransferXUdt() {
             //   return;
             // }
 
-            const shouldPayCkbAmount = getBuyPriceAfterFee(TOTAL_XUDT_SUPPLY - poolXudtAmount, buyAmount);
+            const shouldPayCkbAmount = getBuyPriceAfterFee(XUDT_LAUNCH_AMOUNT + TOTAL_XUDT_SUPPLY - poolXudtAmount, buyAmount);
             console.log("shouldPayCkbAmount", shouldPayCkbAmount);
             let poolCkbCell;
             for (const cell of poolCells) {
@@ -505,7 +510,7 @@ export default function TransferXUdt() {
               }
             }
             console.log("poolXudtCell", poolXudtCell);
-            const canGetCkbAmount = getSellPriceAfterFee(TOTAL_XUDT_SUPPLY - poolXudtAmount, sellAmount);
+            const canGetCkbAmount = getSellPriceAfterFee(XUDT_LAUNCH_AMOUNT +TOTAL_XUDT_SUPPLY - poolXudtAmount, sellAmount);
             console.log("canGetCkbAmount", canGetCkbAmount);
             const order_lock_args = constructArgs(lock.hash(),ckb_args,9900,canGetCkbAmount)
             console.log("order_lock_args",order_lock_args);
