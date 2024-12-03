@@ -217,8 +217,8 @@ export default function TransferXUdt() {
   const [estimatedCkb, setEstimatedCkb] = useState("");
   const [estimatedCkbForSell, setEstimatedCkbForSell] = useState("");
   const [ckbAmount, setCkbAmount] = useState(""); // 新增的CKB输入框状态
-  const type_args = "0xd2e083564139f535c3a3b08c792f21ad63305087970d447f6e301d49987d8815";
-  const bondings_code_hash="0xa161a8cb20ba6b79e86f297d5c5c8a44681a521fe08bf352ab5c9401a8a66606"
+  const type_args = "0x6d760736d721d53c348ef0f3b72a4875350be078a17b06ba4abffc8c497a7a8b";
+  const bondings_code_hash="0x2a462b224cd6c8d09f9572b6bc8384abd674994d118607888b64bb4efaf417de"
   const aggregator_hash = "0x584456c9438f03a19efb8bdfac19361bb6a6b507eefa41a286e154bfb4b9e1b4"
   const bondings_lock_args = type_args+aggregator_hash.slice(2)
   const boundingsLock = new ccc.Script(bondings_code_hash, "type", bondings_lock_args as ccc.Hex);
