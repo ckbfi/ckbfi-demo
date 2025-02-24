@@ -47,7 +47,7 @@ This project uses [`next/font`](https://nextjs.org/docs/app/building-your-applic
 
 
 
-### 3.创建order sell
+### 3.创建order cell
 
 进入http://localhost:3000/connected/createOrderCell
 

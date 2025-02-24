@@ -13,7 +13,7 @@ const TABS: [ReactNode, string, keyof typeof icons, string][] = [
   ["Issue xUDT (SUS)", "/connected/IssueXUdtSus", "BadgeCent", "text-red-500"],
   ["create order cell", "/connected/createOrderCell", "BadgeCent", "text-emerald-500"],
   ["create unique cell and pool cells", "/connected/createPoolCells", "BadgeCent", "text-blue-500"],
-  ["match order cell", "/connected/matchOrderCell", "BadgeCent", "text-emerald-500"],
+  ["match order cell", "/connected/matchOrderCell", "BadgeCent", "text-yellow-500"],
   
 ];
 /* eslint-enable react/jsx-key */

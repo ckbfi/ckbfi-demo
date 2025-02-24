@@ -220,7 +220,7 @@ export default function CreateCkbfiOrderCell() {
         <span>Estimated xUDT to Receive: {buyXudtAmount}</span>
       </div>
       <TextInput
-        label="Buy BCTK"
+        label="Buy Token"
         placeholder="Amount of xUDT to buy"
         state={[buyXudtAmount, setBuyXudtAmount]}
       />
@@ -228,7 +228,7 @@ export default function CreateCkbfiOrderCell() {
         <span>Estimated CKB to Pay: {estimatedCkb}</span>
       </div>
       <TextInput
-        label="Sell BCTK"
+        label="Sell Token"
         placeholder="Amount of xUDT to sell"
         state={[sellXudtAmount, setSellXudtAmount]}
       />
