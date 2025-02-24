@@ -20,17 +20,41 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-## Learn More
+## ckbfi流程体验
+* issue xudt（total supply 10亿）
+* 创建unique liquidity manager cell 和 bondings curve pool cells（获取生成的type id）
+* 创建order sell
+* 撮合order sell 与 bondings curve pool
 
-To learn more about Next.js, take a look at the following resources:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### 1.issue xudt
 
-## Deploy on Vercel
+进入http://localhost:3000/connected/IssueXUdtSus
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+自定义补充好symbol与name后点击issue，连续签名3次交易即可issue成功，点击红框中的txhash链接获取xudt cell的args、txhash与index
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+
+### 2.创建unique liquidity manager cell 和 bondings curve pool cells
+
+进入http://localhost:3000/connected/createPoolCells
+
+利用步骤1中的所获取的xudt cell的txhash、index、args填充信息，点击create pool并签名后，便可完成unique liquidity manager cell 和 bondings curve pool cells的创建，并记录交易弹窗中的type id
+
+
+
+### 3.创建order sell
+
+进入http://localhost:3000/connected/createOrderCell
+
+利用步骤1中的所获取的xudt cell的args与步骤2获取的type id填充信息，自定义需要购买xudt的数量所支付的ckb数量以及滑点，点击buy/sell创建订单，并记录交易弹窗中order cell的txhash与index
+
+
+
+### 4.撮合order sell 与 bondings curve pool
+
+进入http://localhost:3000/connected/matchOrderCell
+
+利用步骤3中的所获取的order cell的txhash、index与步骤1获取的xudt cell的args填充信息，点击match便可完成order cell与bondings curve pool的撮合交易
+
