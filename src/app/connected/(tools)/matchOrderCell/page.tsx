@@ -10,7 +10,7 @@ import { ButtonsPanel } from "../../../components/ButtonsPanel";
 
 
 
-export default function CreateCkbfiPoolCells() {
+export default function MatchCkbfiOrderCell() {
   const { signer, createSender } = useApp();
   const { log,error } = createSender("ckbfi create pool cells");
 
@@ -18,10 +18,14 @@ export default function CreateCkbfiPoolCells() {
 
   const [xudtArgs, setXudtArgs] = useState("");
   const [bondingsCurveCodeHash, setBondingsCurveCodeHash] = useState("0xa161a8cb20ba6b79e86f297d5c5c8a44681a521fe08bf352ab5c9401a8a66606");
+  const [bondingsCurveDepTxHash, setBondingsCurveDepTxHash] = useState("0x1e3a086fc28b9726b1c8fc9c462bd0f7a3f0f5600e263dab84570fa4077af682");
   const [uniqueLiquidityCodeHash, setUniqueLiquidityCodeHash] = useState("0xad5ac9fe1d3cdbe57301be89373ba6f4f154c8af47cfb0c34515758f3e22af5e");
   const [uniqueLiquidityDepTxHash, setUniqueLiquidityDepTxHash] = useState("0x1e3a086fc28b9726b1c8fc9c462bd0f7a3f0f5600e263dab84570fa4077af682");
-  const [xudtCellTxHash, setXudtCellTxHash] = useState("");
-  const [xudtCellIndex, setXudtCellIndex] = useState("0");
+  const [orderScriptCodeHash, setOrderScriptCodeHash] = useState("0xeca2d82fe00581883c038f00eb5b8f8b79f21e4f4a9c52cd952d50f1f4afc765");
+  const [orderScriptDepTxHash, setOrderScriptDepTxHash] = useState("0x1e3a086fc28b9726b1c8fc9c462bd0f7a3f0f5600e263dab84570fa4077af682");
+  const [orderCellTxHash, setOrderCellTxHash] = useState("");
+  const [orderCellIndex, setOrderCellIndex] = useState("0");
+  const [typeId, setTypeId] = useState("");
   // setXudtArgs("0x431c4a68c1f4d1344b3dd3d1d3e46f768e45b76212f9042d17fb1d007850ab0f");
   // setBondingsCurveCodeHash("0xa161a8cb20ba6b79e86f297d5c5c8a44681a521fe08bf352ab5c9401a8a66606");
   // setTypeId("0x2f0d477394f7b617e264bed54368a12a8b36833d399b74616bfc258490181be8");
@@ -43,24 +47,24 @@ export default function CreateCkbfiPoolCells() {
         <span>Base Info</span>
       </div>
       <TextInput
-      label="Enter xUDT Cell Tx Hash"
-      placeholder="0xa161a8cb20ba6b79e86f297d5c5c8a44681a521fe08bf352ab5c9401a8a66606"
-      state={[xudtCellTxHash, setXudtCellTxHash]}
+      label="Enter order Script Code Hash"
+      placeholder="0xeca2d82fe00581883c038f00eb5b8f8b79f21e4f4a9c52cd952d50f1f4afc765"
+      state={[orderScriptCodeHash, setOrderScriptCodeHash]}
     />
     <TextInput
-      label="Enter xUDT Cell Index"
-      placeholder="0"
-      state={[xudtCellIndex, setXudtCellIndex]}
-    />
-    <TextInput
-      label="Enter xUDT Args"
-      placeholder="xUDT Args"
-      state={[xudtArgs, setXudtArgs]}
+      label="Enter order Script Dep Tx Hash"
+      placeholder="0x1e3a086fc28b9726b1c8fc9c462bd0f7a3f0f5600e263dab84570fa4077af682"
+      state={[orderScriptDepTxHash, setOrderScriptDepTxHash]}
     />
     <TextInput
       label="Enter bondingsCurveCodeHash"
       placeholder="bondingsCurveCodeHash"
       state={[bondingsCurveCodeHash, setBondingsCurveCodeHash]}
+    />
+    <TextInput
+      label="Enter bondingsCurveDepTxHash"
+      placeholder="bondingsCurveDepTxHash"
+      state={[bondingsCurveDepTxHash, setBondingsCurveDepTxHash]}
     />
     <TextInput
       label="Enter uniqueLiquidityCodeHash"
@@ -72,11 +76,34 @@ export default function CreateCkbfiPoolCells() {
       placeholder="uniqueLiquiditDepTxHash"
       state={[uniqueLiquidityDepTxHash, setUniqueLiquidityDepTxHash]}
     />
+    <div className="mt-2">
+        <span>Trade Info</span>
+      </div>
+      <TextInput
+      label="Enter type id"
+      placeholder="type id"
+      state={[typeId, setTypeId]}
+    />
+      <TextInput
+      label="Enter order Cell Tx Hash"
+      placeholder="0xa161a8cb20ba6b79e86f297d5c5c8a44681a521fe08bf352ab5c9401a8a66606"
+      state={[orderCellTxHash, setOrderCellTxHash]}
+    />
+    <TextInput
+      label="Enter order Cell Index"
+      placeholder="0"
+      state={[orderCellIndex, setOrderCellIndex]}
+    />
+    <TextInput
+      label="Enter xUDT Args"
+      placeholder="xUDT Args"
+      state={[xudtArgs, setXudtArgs]}
+    />
       <ButtonsPanel>
         <Button
           className="self-center"
           onClick={async () => {
-            if (!signer || xudtArgs === "" || bondingsCurveCodeHash === "" || uniqueLiquidityCodeHash === "" || uniqueLiquidityDepTxHash === "" || xudtCellTxHash === "" || xudtCellIndex === "") {
+            if (!signer || xudtArgs === "" || bondingsCurveCodeHash === "" || uniqueLiquidityCodeHash === "" || uniqueLiquidityDepTxHash === "" || orderCellTxHash === "" || orderCellIndex === "") {
               error("Please fill in all fields");
               return;
             }
@@ -92,7 +119,7 @@ export default function CreateCkbfiPoolCells() {
             
             const createPoolTx = ccc.Transaction.from({
               inputs: [
-                new ccc.CellInput(new ccc.OutPoint(xudtCellTxHash as ccc.Hex, BigInt(xudtCellIndex)), BigInt(0)),
+                new ccc.CellInput(new ccc.OutPoint(orderCellTxHash as ccc.Hex, BigInt(orderCellIndex)), BigInt(0)),
               ],
               outputs: [
                 // pool xudt cell
@@ -150,7 +177,7 @@ export default function CreateCkbfiPoolCells() {
             log("outpointTypeId", outpointTypeId);
           }}
         >
-          Create pool
+          match
         </Button>
       </ButtonsPanel>
     </div>

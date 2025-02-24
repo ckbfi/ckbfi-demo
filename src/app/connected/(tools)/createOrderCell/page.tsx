@@ -44,7 +44,7 @@ export default function CreateCkbfiOrderCell() {
 
   useEffect(() => {
     const calculateEstimatedCkb = async () => {
-      if (buyXudtAmount === "") {
+      if (buyXudtAmount === "" || slipPoint === "" || xudtArgs === "" || bondingsCurveCodeHash === "" || TypeId === "" || orderCodeHash === "") {
         setEstimatedCkb("");
         return;
       }
