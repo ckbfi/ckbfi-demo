@@ -26,6 +26,8 @@ This project uses [`next/font`](https://nextjs.org/docs/app/building-your-applic
 * 创建order sell
 * 撮合order sell 与 bondings curve pool
 
+![1.png](https://github.com/ckbfi/ckbfi-demo/blob/main/assets/1.png?raw=true)
+
 
 
 ### 1.issue xudt
@@ -34,6 +36,7 @@ This project uses [`next/font`](https://nextjs.org/docs/app/building-your-applic
 
 自定义补充好symbol与name后点击issue，连续签名3次交易即可issue成功，点击红框中的txhash链接获取xudt cell的args、txhash与index
 
+![2.png](https://github.com/ckbfi/ckbfi-demo/blob/main/assets/2.png?raw=true)
 
 
 ### 2.创建unique liquidity manager cell 和 bondings curve pool cells
