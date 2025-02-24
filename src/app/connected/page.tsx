@@ -10,8 +10,11 @@ import { BigButton } from "../components/BigButton";
 const TABS: [ReactNode, string, keyof typeof icons, string][] = [
   ["Sign", "/connected/Sign", "Signature", "text-orange-500"],
   ["Transfer", "/connected/Transfer", "ArrowLeftRight", "text-lime-500"],
-  ["bonding curve trade", "/connected/TransferXUdt", "BadgeCent", "text-emerald-500"],
-  ["bonding curve V2 trade", "/connected/v2Trade", "BadgeCent", "text-emerald-500"],
+  ["Issue xUDT (SUS)", "/connected/IssueXUdtSus", "BadgeCent", "text-red-500"],
+  ["create order cell", "/connected/createOrderCell", "BadgeCent", "text-emerald-500"],
+  ["create unique cell and pool cells", "/connected/createPoolCells", "BadgeCent", "text-blue-500"],
+  ["match order cell", "/connected/createOrderCell", "BadgeCent", "text-emerald-500"],
+  
 ];
 /* eslint-enable react/jsx-key */
 
