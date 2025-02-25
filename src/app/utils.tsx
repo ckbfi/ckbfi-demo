@@ -80,8 +80,8 @@ export function getPrice(currentXudtAmount:bigint, xudtAmount:bigint) {
     
     currentXudtAmount = currentXudtAmount / BigInt(100_000_000);
     xudtAmount = xudtAmount / BigInt(100_000_000);
-    console.log("currentXudtAmount", currentXudtAmount);
-    console.log("xudtAmount", xudtAmount);
+    // console.log("currentXudtAmount", currentXudtAmount);
+    // console.log("xudtAmount", xudtAmount);
     const dg = BigInt(114500000000000)
     const uint128_400_000_000 = BigInt(100000000);
     const uint128_1 = BigInt(1);
@@ -100,15 +100,15 @@ export function getPrice(currentXudtAmount:bigint, xudtAmount:bigint) {
     return summation;
 }
 
-export function getBuyPriceAfterFee(currentXudtAmount:bigint, xudtAmount:bigint) {
+export function getBuyPriceAfterFee(currentXudtAmount:bigint, xudtAmount:bigint, feeRate:bigint=BigInt(250)) {
     const price = getPrice(currentXudtAmount, xudtAmount);
-    const fee = price * BigInt(250) / BigInt(10_000);
+    const fee = price * feeRate / BigInt(10_000);
     return price + fee;
 }
 
-export function getSellPriceAfterFee(currentXudtAmount:bigint, xudtAmount:bigint) {
+export function getSellPriceAfterFee(currentXudtAmount:bigint, xudtAmount:bigint, feeRate:bigint=BigInt(250)) {
     const price = getPrice(currentXudtAmount-xudtAmount,xudtAmount );
-    const fee = price * BigInt(250) / BigInt(10_000);
+    const fee = price * feeRate / BigInt(10_000);
     return price - fee;
 }
 export function findAmount(

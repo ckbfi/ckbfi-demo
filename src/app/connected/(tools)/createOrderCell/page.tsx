@@ -79,7 +79,7 @@ export default function CreateCkbfiOrderCell() {
       // console.log("findAmout", findAmount(TOTAL_XUDT_SUPPLY - poolXudtAmount, BigInt(159600), 10000, 'buy'));
       console.log("totalXudtSupply", TOTAL_XUDT_SUPPLY);
       const shouldPayCkbAmount = getBuyPriceAfterFee(XUDT_LAUNCH_AMOUNT+TOTAL_XUDT_SUPPLY - poolXudtAmount, buyAmount);
-      console.log("shouldPayCkbAmount", shouldPayCkbAmount);
+      // console.log("shouldPayCkbAmount", shouldPayCkbAmount);
       setEstimatedCkb(ccc.fixedPointToString(shouldPayCkbAmount, 8));
     };
 
@@ -276,7 +276,7 @@ export default function CreateCkbfiOrderCell() {
             // }
 
             const shouldPayCkbAmount = getBuyPriceAfterFee(XUDT_LAUNCH_AMOUNT + TOTAL_XUDT_SUPPLY - poolXudtAmount, buyAmount);
-            console.log("shouldPayCkbAmount", shouldPayCkbAmount);
+            console.log("buy shouldPayCkbAmount", shouldPayCkbAmount);
             let poolCkbCell;
             for (const cell of poolCells) {
               if (cell.cellOutput.type == undefined) {
