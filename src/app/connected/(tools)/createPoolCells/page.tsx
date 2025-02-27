@@ -12,7 +12,7 @@ import { ButtonsPanel } from "../../../components/ButtonsPanel";
 
 export default function CreateCkbfiPoolCells() {
   const { signer, createSender } = useApp();
-  const { log,error } = createSender("ckbfi create pool cells");
+  const { log, error } = createSender("ckbfi create pool cells");
 
   const { explorerTransaction } = useGetExplorerLink();
 
@@ -26,14 +26,14 @@ export default function CreateCkbfiPoolCells() {
   // setBondingsCurveCodeHash("0xa161a8cb20ba6b79e86f297d5c5c8a44681a521fe08bf352ab5c9401a8a66606");
   // setTypeId("0x2f0d477394f7b617e264bed54368a12a8b36833d399b74616bfc258490181be8");
   // setOrderCodeHash("0xeca2d82fe00581883c038f00eb5b8f8b79f21e4f4a9c52cd952d50f1f4afc765");
-  
-  
+
+
 
 
   // const CellDepsTxHash = "0xd6a1ba4b8e43384e490615715b768883c1e5f28b2f54d501eb62272d0011879d"
   //const type = await ccc.Script.fromKnownScript(signer.client, ccc.KnownScript.XUdt, "0x756defe0217d1ba946cf67966498ec8d72cfe227632d3c3226dc38ee9ae4ee3d");
   // 将type一开始就定义好，构造异步函数，然后在useEffect中调用
-  
+
 
 
 
@@ -43,35 +43,35 @@ export default function CreateCkbfiPoolCells() {
         <span>Base Info</span>
       </div>
       <TextInput
-      label="Enter xUDT Cell Tx Hash"
-      placeholder="0xa161a8cb20ba6b79e86f297d5c5c8a44681a521fe08bf352ab5c9401a8a66606"
-      state={[xudtCellTxHash, setXudtCellTxHash]}
-    />
-    <TextInput
-      label="Enter xUDT Cell Index"
-      placeholder="0"
-      state={[xudtCellIndex, setXudtCellIndex]}
-    />
-    <TextInput
-      label="Enter xUDT Args"
-      placeholder="xUDT Args"
-      state={[xudtArgs, setXudtArgs]}
-    />
-    <TextInput
-      label="Enter bondingsCurveCodeHash"
-      placeholder="bondingsCurveCodeHash"
-      state={[bondingsCurveCodeHash, setBondingsCurveCodeHash]}
-    />
-    <TextInput
-      label="Enter uniqueLiquidityCodeHash"
-      placeholder="uniqueLiquidityCodeHash"
-      state={[uniqueLiquidityCodeHash, setUniqueLiquidityCodeHash]}
-    />
-    <TextInput
-      label="Enter uniqueLiquiditDepTxHash"
-      placeholder="uniqueLiquiditDepTxHash"
-      state={[uniqueLiquidityDepTxHash, setUniqueLiquidityDepTxHash]}
-    />
+        label="Enter xUDT Cell Tx Hash"
+        placeholder="0xa161a8cb20ba6b79e86f297d5c5c8a44681a521fe08bf352ab5c9401a8a66606"
+        state={[xudtCellTxHash, setXudtCellTxHash]}
+      />
+      <TextInput
+        label="Enter xUDT Cell Index"
+        placeholder="0"
+        state={[xudtCellIndex, setXudtCellIndex]}
+      />
+      <TextInput
+        label="Enter xUDT Args"
+        placeholder="xUDT Args"
+        state={[xudtArgs, setXudtArgs]}
+      />
+      <TextInput
+        label="Enter bondingsCurveCodeHash"
+        placeholder="bondingsCurveCodeHash"
+        state={[bondingsCurveCodeHash, setBondingsCurveCodeHash]}
+      />
+      <TextInput
+        label="Enter uniqueLiquidityCodeHash"
+        placeholder="uniqueLiquidityCodeHash"
+        state={[uniqueLiquidityCodeHash, setUniqueLiquidityCodeHash]}
+      />
+      <TextInput
+        label="Enter uniqueLiquiditDepTxHash"
+        placeholder="uniqueLiquiditDepTxHash"
+        state={[uniqueLiquidityDepTxHash, setUniqueLiquidityDepTxHash]}
+      />
       <ButtonsPanel>
         <Button
           className="self-center"
@@ -80,16 +80,16 @@ export default function CreateCkbfiPoolCells() {
               error("Please fill in all fields");
               return;
             }
-            const receiver = await signer.getRecommendedAddress() 
+            const receiver = await signer.getRecommendedAddress()
             const { script: lock } = await ccc.Address.fromString(
-                receiver,
-                signer.client,
-              );
-            const preBondingsArgs = xudtArgs+'00'.repeat(32)
+              receiver,
+              signer.client,
+            );
+            const preBondingsArgs = xudtArgs + '00'.repeat(32)
             const preBondingsLock = new ccc.Script(bondingsCurveCodeHash as ccc.Hex, "type", preBondingsArgs as ccc.Hex);
             const preTypeIdLock = new ccc.Script(uniqueLiquidityCodeHash as ccc.Hex, "type", "0x" + "00".repeat(64) as ccc.Hex)
             const xudtTypeScript = await ccc.Script.fromKnownScript(signer.client, ccc.KnownScript.XUdt, xudtArgs);
-            
+
             const createPoolTx = ccc.Transaction.from({
               inputs: [
                 new ccc.CellInput(new ccc.OutPoint(xudtCellTxHash as ccc.Hex, BigInt(xudtCellIndex)), BigInt(0)),
@@ -98,9 +98,9 @@ export default function CreateCkbfiPoolCells() {
                 // pool xudt cell
                 { lock: preBondingsLock, type: xudtTypeScript },
                 // pool ckb cell
-                { lock: preBondingsLock},
+                { lock: preBondingsLock },
                 // unique liquidity manager cell
-                { lock: preTypeIdLock, type: preTypeIdLock},
+                { lock: preTypeIdLock, type: preTypeIdLock },
                 // charge xudt cell
                 { lock, type: xudtTypeScript },
               ],
@@ -125,7 +125,7 @@ export default function CreateCkbfiPoolCells() {
             await createPoolTx.completeFeeBy(signer, 1000);
             // 更新typeId
             const outpointTypeId = ccc.hashTypeId(createPoolTx.inputs[0], 2)
-            
+
             // 更新unique cell的script xudt_args(32) | type id(32)
             if (createPoolTx.outputs[2].type) {
               createPoolTx.outputs[2].type.args = xudtArgs + outpointTypeId.slice(2) as ccc.Hex;
@@ -140,14 +140,26 @@ export default function CreateCkbfiPoolCells() {
             const xudtLiquididtyData = ccc.numLeToBytes(BigInt(931) * BigInt(1_000_000), 16);
             const ckbLiquididtyData = ccc.numLeToBytes(createPoolTx.outputs[1].capacity, 16);
             const concatenatedBytes = new Uint8Array(xudtLiquididtyData.length + ckbLiquididtyData.length);
-            concatenatedBytes.set(xudtLiquididtyData,0);
+            concatenatedBytes.set(xudtLiquididtyData, 0);
             concatenatedBytes.set(ckbLiquididtyData, xudtLiquididtyData.length);
             createPoolTx.outputsData[2] = '0x' + Buffer.from(concatenatedBytes).toString('hex') as ccc.Hex;
             console.log("type id data:", createPoolTx.outputsData[2])
             console.log("createPoolTx", createPoolTx);
-            const createPoolTxHash = await signer.sendTransaction(createPoolTx);
-            log("Transaction sent:", explorerTransaction(createPoolTxHash));
-            log("outpointTypeId", outpointTypeId);
+            try {
+              const createPoolTxHash = await signer.sendTransaction(createPoolTx);
+              log("Transaction sent:", explorerTransaction(createPoolTxHash));
+              log("outpointTypeId", outpointTypeId);
+            } catch (e) {
+              const errStr = String(e);
+              console.log("e", errStr);
+              if (errStr.includes("Insufficient CKB")) {
+                // 请等待上一个交易完成或检查余额是否足够
+                error("please wait for the previous transaction to complete or check if the balance is sufficient\n" + errStr);
+              } else {
+                error("errStr");
+              }
+            }
+
           }}
         >
           Create pool

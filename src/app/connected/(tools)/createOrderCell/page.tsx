@@ -8,7 +8,8 @@ import { useGetExplorerLink } from "../../../utils";
 import { useApp } from "../../../context";
 import { ButtonsPanel } from "../../../components/ButtonsPanel";
 import { udtBalanceFrom } from "@ckb-ccc/connector-react";
-import { constructArgs,findAmount,getBuyPriceAfterFee,getSellPriceAfterFee,TOTAL_XUDT_SUPPLY,XUDT_LAUNCH_AMOUNT,parseArgs } from '../../../utils'
+import { constructArgs, findAmount, getBuyPriceAfterFee, getSellPriceAfterFee, TOTAL_XUDT_SUPPLY, XUDT_LAUNCH_AMOUNT, parseArgs } from '../../../utils'
+import { error } from "console";
 
 
 
@@ -32,15 +33,15 @@ export default function CreateCkbfiOrderCell() {
   // setBondingsCurveCodeHash("0xa161a8cb20ba6b79e86f297d5c5c8a44681a521fe08bf352ab5c9401a8a66606");
   // setTypeId("0x2f0d477394f7b617e264bed54368a12a8b36833d399b74616bfc258490181be8");
   // setOrderCodeHash("0xeca2d82fe00581883c038f00eb5b8f8b79f21e4f4a9c52cd952d50f1f4afc765");
-  const ckb_args="0x0000000000000000000000000000000000000000000000000000000000000000"
-  
-  
+  const ckb_args = "0x0000000000000000000000000000000000000000000000000000000000000000"
+
+
 
 
   // const CellDepsTxHash = "0xd6a1ba4b8e43384e490615715b768883c1e5f28b2f54d501eb62272d0011879d"
   //const type = await ccc.Script.fromKnownScript(signer.client, ccc.KnownScript.XUdt, "0x756defe0217d1ba946cf67966498ec8d72cfe227632d3c3226dc38ee9ae4ee3d");
   // 将type一开始就定义好，构造异步函数，然后在useEffect中调用
-  
+
 
   useEffect(() => {
     const calculateEstimatedCkb = async () => {
@@ -55,7 +56,7 @@ export default function CreateCkbfiOrderCell() {
         return;
       }
       const type = await ccc.Script.fromKnownScript(signer.client, ccc.KnownScript.XUdt, xudtArgs);
-      const bondings_lock_args = xudtArgs+TypeId.slice(2)
+      const bondings_lock_args = xudtArgs + TypeId.slice(2)
       const boundingsLock = new ccc.Script(bondingsCurveCodeHash as ccc.Hex, "type", bondings_lock_args as ccc.Hex);
 
       const poolCells = [];
@@ -68,7 +69,7 @@ export default function CreateCkbfiOrderCell() {
       for await (const cell of boundingsCell) {
         console.log("cell", cell);
         console.log("txHash", cell.outPoint.txHash);
-        
+
         poolCells.push(cell);
         if (cell.cellOutput.type?.args === type.args) {
           poolXudtAmount += udtBalanceFrom(cell.outputData);
@@ -78,7 +79,7 @@ export default function CreateCkbfiOrderCell() {
       // console.log("buyAmount", buyAmount);
       // console.log("findAmout", findAmount(TOTAL_XUDT_SUPPLY - poolXudtAmount, BigInt(159600), 10000, 'buy'));
       console.log("totalXudtSupply", TOTAL_XUDT_SUPPLY);
-      const shouldPayCkbAmount = getBuyPriceAfterFee(XUDT_LAUNCH_AMOUNT+TOTAL_XUDT_SUPPLY - poolXudtAmount, buyAmount);
+      const shouldPayCkbAmount = getBuyPriceAfterFee(XUDT_LAUNCH_AMOUNT + TOTAL_XUDT_SUPPLY - poolXudtAmount, buyAmount);
       // console.log("shouldPayCkbAmount", shouldPayCkbAmount);
       setEstimatedCkb(ccc.fixedPointToString(shouldPayCkbAmount, 8));
     };
@@ -88,7 +89,7 @@ export default function CreateCkbfiOrderCell() {
 
     return () => clearInterval(intervalId);
 
-  }, [buyXudtAmount, signer,xudtArgs,bondingsCurveCodeHash,TypeId,orderCodeHash]);
+  }, [buyXudtAmount, signer, xudtArgs, bondingsCurveCodeHash, TypeId, orderCodeHash]);
 
   useEffect(() => {
     const calculateEstimatedCkbForSell = async () => {
@@ -99,12 +100,12 @@ export default function CreateCkbfiOrderCell() {
       const sellAmount = ccc.fixedPointFrom(sellXudtAmount);
       let poolXudtAmount = BigInt(0);
 
-      
+
       if (!signer) {
         return;
       }
       const type = await ccc.Script.fromKnownScript(signer.client, ccc.KnownScript.XUdt, xudtArgs);
-      const bondings_lock_args = xudtArgs+TypeId.slice(2)
+      const bondings_lock_args = xudtArgs + TypeId.slice(2)
       const boundingsLock = new ccc.Script(bondingsCurveCodeHash as ccc.Hex, "type", bondings_lock_args as ccc.Hex);
 
       const poolCells = [];
@@ -121,7 +122,7 @@ export default function CreateCkbfiOrderCell() {
         }
       }
       console.log("poolXudtAmount", poolXudtAmount);
-      
+
       const canGetCkbAmount = getSellPriceAfterFee(XUDT_LAUNCH_AMOUNT + TOTAL_XUDT_SUPPLY - poolXudtAmount, sellAmount);
       console.log("canGetCkbAmount", canGetCkbAmount);
       setEstimatedCkbForSell(ccc.fixedPointToString(canGetCkbAmount, 8));
@@ -130,7 +131,7 @@ export default function CreateCkbfiOrderCell() {
     calculateEstimatedCkbForSell();
 
     return () => clearInterval(intervalId);
-  }, [sellXudtAmount, signer,xudtArgs,bondingsCurveCodeHash,TypeId,orderCodeHash]);
+  }, [sellXudtAmount, signer, xudtArgs, bondingsCurveCodeHash, TypeId, orderCodeHash]);
 
   useEffect(() => {
     const calculateEstimatedXudt = async () => {
@@ -144,7 +145,7 @@ export default function CreateCkbfiOrderCell() {
         return;
       }
       const type = await ccc.Script.fromKnownScript(signer.client, ccc.KnownScript.XUdt, xudtArgs);
-      const bondings_lock_args = xudtArgs+TypeId.slice(2)
+      const bondings_lock_args = xudtArgs + TypeId.slice(2)
       const boundingsLock = new ccc.Script(bondingsCurveCodeHash as ccc.Hex, "type", bondings_lock_args as ccc.Hex);
 
       const poolCells = [];
@@ -173,45 +174,45 @@ export default function CreateCkbfiOrderCell() {
 
     return () => clearInterval(intervalId);
 
-    
-  }, [ckbAmount, signer,xudtArgs,bondingsCurveCodeHash,TypeId,orderCodeHash]);
+
+  }, [ckbAmount, signer, xudtArgs, bondingsCurveCodeHash, TypeId, orderCodeHash]);
 
   return (
     <div className="flex w-full flex-col items-stretch">
       <div className="mt-2">
         <span>Base Info</span>
       </div>
-    
-    <TextInput
-      label="Enter bondingsCurveCodeHash"
-      placeholder="bondingsCurveCodeHash"
-      state={[bondingsCurveCodeHash, setBondingsCurveCodeHash]}
-    />
-    
-    <TextInput
-      label="Enter orderCodeHash"
-      placeholder="orderCodeHash"
-      state={[orderCodeHash, setOrderCodeHash]}
-    />
-    <TextInput
-      label="Enter xUDT Args"
-      placeholder="0x431c4a68c1f4d1344b3dd3d1d3e46f768e45b76212f9042d17fb1d007850ab0f"
-      state={[xudtArgs, setXudtArgs]}
-    />
-    <TextInput
-      label="Enter TypeId"
-      placeholder="0x2f0d477394f7b617e264bed54368a12a8b36833d399b74616bfc258490181be8"
-      state={[TypeId, setTypeId]}
-    />
-    <div className="mt-3">
+
+      <TextInput
+        label="Enter bondingsCurveCodeHash"
+        placeholder="bondingsCurveCodeHash"
+        state={[bondingsCurveCodeHash, setBondingsCurveCodeHash]}
+      />
+
+      <TextInput
+        label="Enter orderCodeHash"
+        placeholder="orderCodeHash"
+        state={[orderCodeHash, setOrderCodeHash]}
+      />
+      <TextInput
+        label="Enter xUDT Args"
+        placeholder="0x431c4a68c1f4d1344b3dd3d1d3e46f768e45b76212f9042d17fb1d007850ab0f"
+        state={[xudtArgs, setXudtArgs]}
+      />
+      <TextInput
+        label="Enter TypeId"
+        placeholder="0x2f0d477394f7b617e264bed54368a12a8b36833d399b74616bfc258490181be8"
+        state={[TypeId, setTypeId]}
+      />
+      <div className="mt-3">
         <span>Trade Info</span>
-    </div>
-    <TextInput
-      label="Enter slipPoint"
-      placeholder="slipPoint"
-      state={[slipPoint, setSlipPoint]}
-    />
-    <TextInput
+      </div>
+      <TextInput
+        label="Enter slipPoint"
+        placeholder="slipPoint"
+        state={[slipPoint, setSlipPoint]}
+      />
+      <TextInput
         label="Enter CKB Amount"
         placeholder="Amount of CKB to spend"
         state={[ckbAmount, setCkbAmount]}
@@ -242,20 +243,20 @@ export default function CreateCkbfiOrderCell() {
             if (!signer || buyXudtAmount === "") {
               return;
             }
-            const receiver = await signer.getRecommendedAddress() 
+            const receiver = await signer.getRecommendedAddress()
             const { script: lock } = await ccc.Address.fromString(
-                receiver,
-                signer.client,
-              );
+              receiver,
+              signer.client,
+            );
             const buyAmount = ccc.fixedPointFrom(buyXudtAmount);
             let poolXudtAmount = BigInt(0);
-            let poolXudtCell:ccc.Cell | undefined;
+            let poolXudtCell: ccc.Cell | undefined;
             const poolCells = [];
             const type = await ccc.Script.fromKnownScript(signer.client, ccc.KnownScript.XUdt, xudtArgs);
-            const bondings_lock_args = xudtArgs+TypeId.slice(2)
+            const bondings_lock_args = xudtArgs + TypeId.slice(2)
             const boundingsLock = new ccc.Script(bondingsCurveCodeHash as ccc.Hex, "type", bondings_lock_args as ccc.Hex);
 
-            const boundingsCell =signer.client.findCellsOnChain({
+            const boundingsCell = signer.client.findCellsOnChain({
               script: boundingsLock,
               scriptType: "lock",
               scriptSearchMode: "exact",
@@ -285,22 +286,22 @@ export default function CreateCkbfiOrderCell() {
             }
             console.log("poolCkbCell", poolCkbCell);
             // 默认1%的滑点
-            
-            const order_lock_args = constructArgs(boundingsLock.hash(),lock.hash(),xudtArgs,10000,buyAmount)
-            console.log("order_lock_args",order_lock_args);
+
+            const order_lock_args = constructArgs(boundingsLock.hash(), lock.hash(), xudtArgs, 10000, buyAmount)
+            console.log("order_lock_args", order_lock_args);
             const parsedArgs = parseArgs(order_lock_args)
             console.log(`bondingsLockHash:${parsedArgs.bondingsLockHash},userPubkey: ${parsedArgs.userPubkey}, xudtArgs: ${parsedArgs.xudtArgs}, slipPoint: ${parsedArgs.slipPoint}, desiredAmount: ${parsedArgs.desiredAmount}`);
-            const orderLock =new ccc.Script(orderCodeHash as ccc.Hex,"type",order_lock_args as ccc.Hex)
+            const orderLock = new ccc.Script(orderCodeHash as ccc.Hex, "type", order_lock_args as ccc.Hex)
             // let tx: ccc.Transaction;
             const tx = ccc.Transaction.from({
               inputs: [],
               outputs: [
                 // 订单锁，其中144为xudt的包装费，should_pay_ckb_amount为支付到pool的数量
-                {  lock:orderLock },
+                { lock: orderLock },
               ],
             });
             // if (poolCkbCell){
-              
+
             // }else {
             //   tx = ccc.Transaction.from({
             //     inputs: [new ccc.CellInput(poolXudtCell!.outPoint, BigInt(0))],
@@ -317,17 +318,28 @@ export default function CreateCkbfiOrderCell() {
             //   });
             // }
 
-            
+
 
             // await tx.addCellDepsOfKnownScripts(signer.client, ccc.KnownScript.XUdt);
             // tx.addCellDepsAtStart(new ccc.CellDep(new ccc.OutPoint(CellDepsTxHash, BigInt(0)), ccc.depTypeFrom("code")) as ccc.CellDepLike);
             // await tx.completeInputsByUdt(signer, type);
             await tx.completeFeeBy(signer, 1000);
-            tx.outputs[0].capacity+=shouldPayCkbAmount
+            tx.outputs[0].capacity += shouldPayCkbAmount
             await tx.completeFeeBy(signer, 1000);
-            
-            const distributeTxHash = await signer.sendTransaction(tx);
-            log("Transaction sent:", explorerTransaction(distributeTxHash));
+            try {
+              const distributeTxHash = await signer.sendTransaction(tx);
+              log("Transaction sent:", explorerTransaction(distributeTxHash));
+            } catch (e) {
+              const errStr = String(e);
+              console.log("e", errStr);
+              if (errStr.includes("Insufficient")) {
+                // 请等待上一个交易完成或检查余额是否足够
+                error("please wait for the previous transaction to complete or check if the balance is sufficient\n" + errStr);
+              } else {
+                error("errStr");
+              }
+            }
+
           }}
         >
           Buy
@@ -338,17 +350,17 @@ export default function CreateCkbfiOrderCell() {
             if (!signer || sellXudtAmount === "") {
               return;
             }
-            const receiver = await signer.getRecommendedAddress() 
+            const receiver = await signer.getRecommendedAddress()
             const { script: lock } = await ccc.Address.fromString(
-                receiver,
-                signer.client,
-              );
+              receiver,
+              signer.client,
+            );
             const sellAmount = ccc.fixedPointFrom(sellXudtAmount);
             let poolXudtAmount = BigInt(0);
-            let poolXudtCell:ccc.Cell | undefined;
+            let poolXudtCell: ccc.Cell | undefined;
             const poolCells = [];
             const type = await ccc.Script.fromKnownScript(signer.client, ccc.KnownScript.XUdt, xudtArgs);
-            const bondings_lock_args = xudtArgs+TypeId.slice(2)
+            const bondings_lock_args = xudtArgs + TypeId.slice(2)
             const boundingsLock = new ccc.Script(bondingsCurveCodeHash as ccc.Hex, "type", bondings_lock_args as ccc.Hex);
 
             const boundingsCell = signer.client.findCellsOnChain({
@@ -365,13 +377,13 @@ export default function CreateCkbfiOrderCell() {
               }
             }
             console.log("poolXudtCell", poolXudtCell);
-            const canGetCkbAmount = getSellPriceAfterFee(XUDT_LAUNCH_AMOUNT +TOTAL_XUDT_SUPPLY - poolXudtAmount, sellAmount);
+            const canGetCkbAmount = getSellPriceAfterFee(XUDT_LAUNCH_AMOUNT + TOTAL_XUDT_SUPPLY - poolXudtAmount, sellAmount);
             console.log("canGetCkbAmount", canGetCkbAmount);
-            const order_lock_args = constructArgs(boundingsLock.hash(),lock.hash(),ckb_args,9900,canGetCkbAmount)
-            console.log("order_lock_args",order_lock_args);
+            const order_lock_args = constructArgs(boundingsLock.hash(), lock.hash(), ckb_args, 9900, canGetCkbAmount)
+            console.log("order_lock_args", order_lock_args);
             const parsedArgs = parseArgs(order_lock_args)
             console.log(`bondingsLockHash:${parsedArgs.bondingsLockHash} ,userPubkey: ${parsedArgs.userPubkey}, xudtArgs: ${parsedArgs.xudtArgs}, slipPoint: ${parsedArgs.slipPoint}, desiredAmount: ${parsedArgs.desiredAmount}`);
-            const orderLock =new ccc.Script(orderCodeHash as ccc.Hex,"type",order_lock_args as ccc.Hex)
+            const orderLock = new ccc.Script(orderCodeHash as ccc.Hex, "type", order_lock_args as ccc.Hex)
             // if (canGetCkbAmount < ccc.fixedPointFrom(64)) {
             //   error("can not sell less than 64 CKB");
             //   return;
@@ -389,10 +401,10 @@ export default function CreateCkbfiOrderCell() {
               ],
               outputs: [
                 // 订单锁，其中144为xudt的包装费，should_pay_ckb_amount为支付到pool的数量
-                  {  lock:orderLock,type },
+                { lock: orderLock, type },
               ],
               outputsData: [
-                ccc.numLeToBytes(sellAmount,16),
+                ccc.numLeToBytes(sellAmount, 16),
               ]
             });
 
@@ -400,27 +412,39 @@ export default function CreateCkbfiOrderCell() {
             // tx.addCellDepsAtStart(new ccc.CellDep(new ccc.OutPoint(CellDepsTxHash, BigInt(0)), ccc.depTypeFrom("code")) as ccc.CellDepLike);
             await tx.completeInputsByUdt(signer, type);
             const balanceDiff =
-                (await tx.getInputsUdtBalance(signer.client, type)) -
-                tx.getOutputsUdtBalance(type);
-              const myInputXudtAmount = await tx.getInputsUdtBalance(signer.client, type)
-              console.log("myInputXudtAmount",myInputXudtAmount);
-              console.log("balanceDiff",balanceDiff);
-              if (balanceDiff > ccc.Zero) {
-                // Add UDT change
-                tx.addOutput(
-                  {
-                    lock,
-                    type,
-                  },
-                  ccc.numLeToBytes(balanceDiff, 16),
-                );
-              }
+              (await tx.getInputsUdtBalance(signer.client, type)) -
+              tx.getOutputsUdtBalance(type);
+            const myInputXudtAmount = await tx.getInputsUdtBalance(signer.client, type)
+            console.log("myInputXudtAmount", myInputXudtAmount);
+            console.log("balanceDiff", balanceDiff);
+            if (balanceDiff > ccc.Zero) {
+              // Add UDT change
+              tx.addOutput(
+                {
+                  lock,
+                  type,
+                },
+                ccc.numLeToBytes(balanceDiff, 16),
+              );
+            }
             // Complete missing parts: Fill inputs
             await tx.completeInputsByCapacity(signer);
             await tx.completeFeeBy(signer, 1000);
             console.log("tx", tx);
-            const distributeTxHash = await signer.sendTransaction(tx);
-            log("Transaction sent:", explorerTransaction(distributeTxHash));
+            try {
+              const distributeTxHash = await signer.sendTransaction(tx);
+              log("Transaction sent:", explorerTransaction(distributeTxHash));
+            } catch (e) {
+              const errStr = String(e);
+              console.log("e", errStr);
+              if (errStr.includes("Insufficient")) {
+                // 请等待上一个交易完成或检查余额是否足够
+                error("please wait for the previous transaction to complete or check if the balance is sufficient\n" + errStr);
+              } else {
+                error("errStr");
+              }
+            }
+
           }}
         >
           Sell
